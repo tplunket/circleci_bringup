@@ -19,25 +19,6 @@ int CL_Parse(CommandLineProcessor, int argc, char const** argv);
 
 #ifdef __cplusplus
 } // extern "C"
-
-class CommandLineOption;
-
-class CommandLine
-{
-public:
-    CommandLine() : processor(CL_Create()) {}
-    ~CommandLine() { CL_Destroy(processor); }
-
-    void AddCountingOption(int* value, char const* name)
-        { CL_AddCountingOption(processor, value, name); }
-
-    bool Parse(int argc, char const** argv) { return CL_Parse(processor, argc, argv) == argc; }
-
-    char const* GetApplicationName() const { return CL_GetAppName(processor); }
-
-private:
-    CommandLineProcessor processor;
-};
-#endif // def __cplusplus
+#endif
 
 #endif // ndef CommandLine_h

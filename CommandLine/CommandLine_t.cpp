@@ -1,4 +1,4 @@
-#include "CommandLine.h"
+#include "CommandLine.hpp"
 
 #define CATCH_CONFIG_MAIN
 #include "Catch/Catch.hpp"
@@ -7,7 +7,7 @@
     char const* args[] = { __VA_ARGS__ }; \
     int const num_args = sizeof(args) / sizeof(args[0])
 
-TEST_CASE( "CommandLine API" )
+TEST_CASE( "CommandLine API, C Interface" )
 {
     CommandLineProcessor clp = CL_Create();
     REQUIRE(clp != NULL);
