@@ -1,9 +1,5 @@
 #include "CommandLine.h"
 
-#ifdef __cplusplus
-#error "No."
-#endif
-
 #include <string.h>
 #include <stdlib.h>
 
