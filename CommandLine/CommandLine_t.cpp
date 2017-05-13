@@ -27,13 +27,13 @@ TEST_CASE( "Boolean arguments" )
     SECTION( "Boolean reset to false." )
     {
         my_val = true;
-        cl.AddArgument(&my_val, "testFlag");
+        cl.AddOption(&my_val, "testFlag");
         REQUIRE( my_val == false );
     }
 
     SECTION( "Add the argument." )
     {
-        cl.AddArgument(&my_val, "flag");
+        cl.AddOption(&my_val, "flag");
 
         SECTION( "No arg, stays false." )
         {
@@ -53,8 +53,8 @@ TEST_CASE( "Boolean arguments" )
     SECTION( "Two arguments" )
     {
         bool my_other_val;
-        cl.AddArgument(&my_val, "a");
-        cl.AddArgument(&my_other_val, "b");
+        cl.AddOption(&my_val, "a");
+        cl.AddOption(&my_other_val, "b");
 
         SECTION("One arg")
         {

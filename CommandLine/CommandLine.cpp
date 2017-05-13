@@ -4,31 +4,31 @@
 
 #include <iostream>
 
-class CommandLineArgument
+class CommandLineOption
 {
 protected:
-    CommandLineArgument(char const* name) : name(name), next(nullptr) {}
+    CommandLineOption(char const* name) : name(name), next(nullptr) {}
 
 public:
-    virtual ~CommandLineArgument() { delete next; }
+    virtual ~CommandLineOption() { delete next; }
 
     virtual bool GetNumParams() const=0;
     char const* GetName() const { return name; }
 
     virtual bool LoadParams(char const** p)=0;
 
-    void SetNext(CommandLineArgument* n) { next = n; }
-    CommandLineArgument* GetNext() const { return next; }
+    void SetNext(CommandLineOption* n) { next = n; }
+    CommandLineOption* GetNext() const { return next; }
 
 private:
     char const* name;
-    CommandLineArgument* next;
+    CommandLineOption* next;
 };
 
-class BoolArgument : public CommandLineArgument
+class BoolOption : public CommandLineOption
 {
 public:
-    BoolArgument(char const* name, bool* value) : CommandLineArgument(name), value(value)
+    BoolOption(char const* name, bool* value) : CommandLineOption(name), value(value)
         { *value = false; }
 
     virtual bool GetNumParams() const override { return 0; }
@@ -38,20 +38,20 @@ private:
     bool* value;
 };
 
-CommandLine::CommandLine() : appName(""), arguments(nullptr)
+CommandLine::CommandLine() : appName(""), options(nullptr)
 {
 }
 
 CommandLine::~CommandLine()
 {
-    delete arguments;
+    delete options;
 }
 
-void CommandLine::AddArgument(bool* output, char const* name)
+void CommandLine::AddOption(bool* output, char const* name)
 {
-    BoolArgument* ba = new BoolArgument(name, output);
-    ba->SetNext(arguments);
-    arguments = ba;
+    BoolOption* bo = new BoolOption(name, output);
+    bo->SetNext(options);
+    options = bo;
 }
 
 bool CommandLine::Parse(int argc, char const** argv)
@@ -63,19 +63,19 @@ bool CommandLine::Parse(int argc, char const** argv)
         char const* cla = argv[i];
         if ((cla[0] == '-') || (cla[0] == '/'))
         {
-            CommandLineArgument* a = arguments;
-            while ((a != nullptr) && (std::strcmp(a->GetName(), cla+1) != 0))
-                a = a->GetNext();
+            CommandLineOption* o = options;
+            while ((o != nullptr) && (std::strcmp(o->GetName(), cla+1) != 0))
+                o = o->GetNext();
 
-            if (a != nullptr)
-                a->LoadParams(nullptr);
+            if (o != nullptr)
+                o->LoadParams(nullptr);
         }
     }
 
     return true;
 }
 
-bool BoolArgument::LoadParams(char const** params)
+bool BoolOption::LoadParams(char const** params)
 {
     *value = true;
     return true;

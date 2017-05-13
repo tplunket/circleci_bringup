@@ -1,7 +1,7 @@
 #ifndef CommandLine_h
 #define CommandLine_h
 
-class CommandLineArgument;
+class CommandLineOption;
 
 class CommandLine
 {
@@ -9,7 +9,7 @@ public:
     CommandLine();
     ~CommandLine();
 
-    void AddArgument(bool*, char const* name);
+    void AddOption(bool*, char const* name);
 
     bool Parse(int argc, char const** argv);
 
@@ -17,7 +17,7 @@ public:
 
 private:
     char const* appName;
-    CommandLineArgument* arguments;
+    CommandLineOption* options;
 };
 
 #endif // ndef CommandLine_h
