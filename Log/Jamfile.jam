@@ -1,0 +1,30 @@
+SubDir TOP Log ;
+
+include Jamrules.jam ;
+
+ActiveProject Log ;
+
+# set up useful variables
+LIBNAME = Log ;
+
+# Grab the list of all of the source files
+SOURCES = "*.c" "*.cpp" ;
+SOURCES = "Log/"$(SOURCES) ;
+echo "Log SRC" $(SOURCES) ;
+SOURCES = $(SOURCES:W) ;
+echo "Log SRC" $(SOURCES) ;
+
+# Get the list of test files
+TESTS = "*_t.cpp" ;
+TESTS = $(TESTS:W) ;
+
+# Remove the test files from the lib sources
+SOURCES -= $(TESTS) ;
+
+# Fire off the library build
+ProjectSubDir $(LIBNAME) ;
+C.Library $(LIBNAME) : $(SOURCES) ;
+
+# Issue a rule for that test application
+TestApplication $(TESTS) : $(LIBNAME) ;
+
