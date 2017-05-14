@@ -34,7 +34,7 @@ TEST_CASE( "Default construction" )
     }
 }
 
-TEST_CASE( "Boolean arguments" )
+TEST_CASE( "Boolean options" )
 {
     CommandLine cl;
     int my_val = 0;
@@ -46,11 +46,11 @@ TEST_CASE( "Boolean arguments" )
         REQUIRE( my_val == 0 );
     }
 
-    SECTION( "Add the argument." )
+    SECTION( "Add the option." )
     {
         cl.AddCountingOption(&my_val, "flag");
 
-        SECTION( "No arg, stays false." )
+        SECTION( "No option, stays false." )
         {
             ARGS( "appname" );
             cl.Parse(num_args, args);
@@ -65,7 +65,7 @@ TEST_CASE( "Boolean arguments" )
         }
     }
 
-    SECTION( "Two arguments" )
+    SECTION( "Two options" )
     {
         int my_other_val;
         cl.AddCountingOption(&my_val, "a");
