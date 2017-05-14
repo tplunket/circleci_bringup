@@ -13,31 +13,39 @@
 #include <stdlib.h>
 
 #define k_bufferSize 256
-#define k_maxNumTargets 4
 
 struct LogTargetData
 {
     LogTarget function;
     void* data;
+    struct LogTargetData* next;
 };
-static struct LogTargetData l_logTargets[k_maxNumTargets] = { 0 };
+static struct LogTargetData* s_logTargets = NULL;
 
 /**
  * Add a function to the list of functions called with logging output.
  */
 void LogTargetAdd(LogTarget function, void* data)
 {
-    unsigned int i;
-
-    for (i = 0; i < k_maxNumTargets; ++i)
+    struct LogTargetData** p = &s_logTargets;
+    while (*p != NULL)
     {
-        struct LogTargetData* ltd = &l_logTargets[i];
-        if (ltd->function == NULL)
+        struct LogTargetData* ltd = *p;
+        if ((ltd->function == function) && (ltd->data == data))
         {
-            ltd->function = function;
-            ltd->data = data;
-            break;
+            ltd->function("This LogTarget has already been added.",
+                          k_logWarning, __FILE__, __LINE__, data);
         }
+
+        p = &ltd->next;
+    }
+
+    {
+        struct LogTargetData* ltd = (struct LogTargetData*)malloc(sizeof(struct LogTargetData));
+        ltd->function = function;
+        ltd->data = data;
+        ltd->next = NULL;
+        *p = ltd;
     }
 }
 
@@ -46,16 +54,18 @@ void LogTargetAdd(LogTarget function, void* data)
  */
 void LogTargetRemove(LogTarget function, void* data)
 {
-    unsigned int i;
-
-    for (i = 0; i < k_maxNumTargets; ++i)
+    struct LogTargetData** p = &s_logTargets;
+    while (*p != NULL)
     {
-        struct LogTargetData* ltd = &l_logTargets[i];
+        struct LogTargetData* ltd = *p;
         if ((ltd->function == function) && (ltd->data == data))
         {
-            ltd->function = NULL;
-            ltd->data = NULL;
+            *p = ltd->next;
+            free(ltd);
         }
+
+        if (*p != NULL)
+            p = &(*p)->next;
     }
 }
 
@@ -68,8 +78,6 @@ void LogMessage(LogType type, const char* file, const unsigned int line, const c
     static char staticBuffer[k_bufferSize];
     char* tempBuffer = NULL;
     char* buffer;
-
-    unsigned int i;
 
     va_list args;
     va_start(args, message);
@@ -97,14 +105,15 @@ void LogMessage(LogType type, const char* file, const unsigned int line, const c
         buffer[numChars+1] = 0;
     }
 
-    for (i = 0; i < k_maxNumTargets; ++i)
+    struct LogTargetData* ltd = s_logTargets;
+    while (ltd != NULL)
     {
-        struct LogTargetData const* ltd = &l_logTargets[i];
-
         if (ltd->function != NULL)
         {
             ltd->function(buffer, type, file, line, ltd->data);
         }
+
+        ltd = ltd->next;
     }
 
     if (tempBuffer != NULL)
