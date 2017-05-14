@@ -18,21 +18,28 @@
 #define k_bufferSize 256
 #define k_maxNumTargets 4
 
-static LogTarget l_logTargets[k_maxNumTargets] = { 0 };
+struct LogTargetData
+{
+    LogTarget function;
+    void* data;
+};
+static struct LogTargetData l_logTargets[k_maxNumTargets] = { 0 };
 
 //------------------------------------------------
 // LogTargetAdd
 //
 // Add a function to the list of functions called with logging output
-void LogTargetAdd(LogTarget function)
+void LogTargetAdd(LogTarget function, void* data)
 {
     unsigned int i;
 
     for (i = 0; i < k_maxNumTargets; ++i)
     {
-        if (l_logTargets[i] == NULL)
+        struct LogTargetData* ltd = &l_logTargets[i];
+        if (ltd->function == NULL)
         {
-            l_logTargets[i] = function;
+            ltd->function = function;
+            ltd->data = data;
             break;
         }
     }
@@ -42,15 +49,17 @@ void LogTargetAdd(LogTarget function)
 // LogTargetRemove
 //
 // Remove a function from the list of functions called when logging
-void LogTargetRemove(LogTarget function)
+void LogTargetRemove(LogTarget function, void* data)
 {
     unsigned int i;
 
     for (i = 0; i < k_maxNumTargets; ++i)
     {
-        if (l_logTargets[i] == function)
+        struct LogTargetData* ltd = &l_logTargets[i];
+        if ((ltd->function == function) && (ltd->data == data))
         {
-            l_logTargets[i] = NULL;
+            ltd->function = NULL;
+            ltd->data = NULL;
         }
     }
 }
@@ -96,11 +105,11 @@ void LogMessage(LogType type, const char* file, const unsigned int line, const c
 
     for (i = 0; i < k_maxNumTargets; ++i)
     {
-        LogTarget lf = l_logTargets[i];
+        struct LogTargetData const* ltd = &l_logTargets[i];
 
-        if (lf != NULL)
+        if (ltd->function != NULL)
         {
-            lf(buffer, type, file, line);
+            ltd->function(buffer, type, file, line, ltd->data);
         }
     }
 
