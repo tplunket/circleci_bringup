@@ -1,3 +1,10 @@
+/**
+ * A simple command line processing system.
+ *
+ * \author Tom Plunket <tom@mightysprite.com>
+ * \copyright (c) 2017 Tom Plunket, all rights reserved
+ */
+
 #include "CommandLine.h"
 
 #include <string.h>

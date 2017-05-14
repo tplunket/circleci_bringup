@@ -1,5 +1,11 @@
 #ifndef CommandLine_h
 #define CommandLine_h
+/**
+ * A simple command line processing system
+ *
+ * \author Tom Plunket <tom@mightysprite.com>
+ * \copyright (c) 2017 Tom Plunket, all rights reserved
+ */
 
 #ifdef __cplusplus
 extern "C"

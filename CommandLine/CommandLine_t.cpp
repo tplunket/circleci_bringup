@@ -1,3 +1,10 @@
+/**
+ * Tests for CommandLine.
+ *
+ * \author Tom Plunket <tom@mightysprite.com>
+ * \copyright (c) 2017 Tom Plunket, all rights reserved
+ */
+
 #include "CommandLine.hpp"
 
 #define CATCH_CONFIG_MAIN

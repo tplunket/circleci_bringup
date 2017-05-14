@@ -1,5 +1,11 @@
 #ifndef CommandLine_hpp
 #define CommandLine_hpp
+/**
+ * A simple command line processor.
+ *
+ * \author Tom Plunket <tom@mightysprite.com>
+ * \copyright (c) 2017 Tom Plunket, all rights reserved
+ */
 
 #include "CommandLine.h"
 
