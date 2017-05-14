@@ -2,7 +2,7 @@
  * A simple logging system.
  *
  * \author Tom Plunket <tom@mightysprite.com>
- * \copyright (c) 2010 Tom Plunket, all rights reserved
+ * \copyright (c) 2010-2017 Tom Plunket, all rights reserved
  */
 
 #ifndef Log_h
@@ -49,9 +49,9 @@ typedef enum LogType_ LogType;
  * The API to add and remove Log Targets; each Log Target will be called for each log message
  * generated.
  */
-typedef void(*LogTarget)(char const* m, LogType lt, char const* file, unsigned int line, void* d);
-void LogTargetAdd(LogTarget function, void* data);
-void LogTargetRemove(LogTarget function, void* data);
+typedef void(*LogTargetFn)(char const* m, LogType lt, char const* file, unsigned int line, void* d);
+void LogTargetAdd(LogTargetFn function, void* data);
+void LogTargetRemove(LogTargetFn function, void* data);
 
 /// Log one message; normally this function won't be called directly
 void LogMessage(LogType type, char const* file, const unsigned int line, char const* message, ...);

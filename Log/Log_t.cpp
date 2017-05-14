@@ -2,7 +2,7 @@
  * Unit tests for Log.
  *
  * \author Tom Plunket <tom@mightysprite.com>
- * \copyright (c) 2010 Tom Plunket, all rights reserved
+ * \copyright (c) 2010-2017 Tom Plunket, all rights reserved
  */
 
 #include "Log.h"

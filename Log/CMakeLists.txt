@@ -11,5 +11,5 @@ include_directories("${CMAKE_SOURCE_DIR}/..")
 
 add_library(Log Log.c)
 
-add_executable(LogTests Log_t.cpp)
+add_executable(LogTests Log_t.cpp LogTarget_t.cpp)
 target_link_libraries(LogTests Log)
