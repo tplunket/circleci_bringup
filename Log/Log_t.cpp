@@ -83,7 +83,7 @@ TEST_CASE( "Test the actual log messages returned" )
         int issuingLine;
     };
 
-    LogCapture data = { 0 };
+    LogCapture data { { 0 }, nullptr, 0 };
 
     auto targetFunction = [](char const* message, LogType type, char const* file, unsigned int line,
                              void* data) -> void
