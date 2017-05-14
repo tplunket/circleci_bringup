@@ -10,7 +10,7 @@
 #define CATCH_CONFIG_MAIN
 #include "Catch/Catch.hpp"
 
-TEST_CASE( "MacrosInIfClauses" )
+TEST_CASE( "Macros in if clauses" )
 {
     /// Do the macros play nice with un-blocked if/else blocks?
 
@@ -97,7 +97,7 @@ TEST_CASE( "Test the actual log messages returned" )
 
     LogTargetAdd(targetFunction, &data);
 
-    SECTION( "MessageGetsTrailingNewline" )
+    SECTION( "Message gets trailing newline" )
     {
         Info("Is the newline stuck on the end for me?");
         REQUIRE_THAT("Is the newline stuck on the end for me?\n", Catch::Equals(data.buffer));
@@ -105,7 +105,7 @@ TEST_CASE( "Test the actual log messages returned" )
 
     //----------------------------
     // But if there is already a newline at the end, don't double it.
-    SECTION( "TheresNoAdditionalNewlineThough" )
+    SECTION( "Theres no additional newline though" )
     {
         Info("I already have a newline.\n");
         REQUIRE_THAT("I already have a newline.\n", Catch::Equals(data.buffer));
@@ -113,7 +113,7 @@ TEST_CASE( "Test the actual log messages returned" )
 
     //----------------------------
     // Do we get the file that issued the message through properly?
-    SECTION( "IsTheFilenamePassedProperly" )
+    SECTION( "Is the filename passed properly" )
     {
         Spew("spam I am.");
         REQUIRE_THAT(__FILE__, Catch::Equals(data.issuingFile));
@@ -121,7 +121,7 @@ TEST_CASE( "Test the actual log messages returned" )
 
     //----------------------------
     // ...and do we get the proper line number, as well?
-    SECTION( "IsTheLineNumberPassedProperly" )
+    SECTION( "Is the line number passed properly" )
     {
         Error("This is fun.");
         REQUIRE(__LINE__ - 1 == data.issuingLine); // -1 because the message is the line above this.
@@ -129,7 +129,7 @@ TEST_CASE( "Test the actual log messages returned" )
 
     //----------------------------
     // If we pass a mega-sized message through, does it get passed properly?
-    SECTION( "MegaMessage" )
+    SECTION( "Mega message" )
     {
         char* bigBuffer = new char[5002];
         memset(bigBuffer, 'a', 5000);

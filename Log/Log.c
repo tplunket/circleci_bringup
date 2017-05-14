@@ -1,12 +1,9 @@
-/*- Log.c -------------------------------------------------------------------*\
-|
-|   Contents:   A simple logging system.
-|
-|   Author:     Tom Plunket <tom@mightysprite.com>
-|
-|   Copyright:  (c) 2010 Tom Plunket, all rights reserved
-|
-\*----------------------------------------------------------------------------*/
+/**
+ * A simple logging system.
+ *
+ * \author Tom Plunket <tom@mightysprite.com>
+ * \copyright (c) 2010 Tom Plunket, all rights reserved
+ */
 
 #include "Log.h"
 
@@ -25,10 +22,9 @@ struct LogTargetData
 };
 static struct LogTargetData l_logTargets[k_maxNumTargets] = { 0 };
 
-//------------------------------------------------
-// LogTargetAdd
-//
-// Add a function to the list of functions called with logging output
+/**
+ * Add a function to the list of functions called with logging output.
+ */
 void LogTargetAdd(LogTarget function, void* data)
 {
     unsigned int i;
@@ -45,10 +41,9 @@ void LogTargetAdd(LogTarget function, void* data)
     }
 }
 
-//------------------------------------------------
-// LogTargetRemove
-//
-// Remove a function from the list of functions called when logging
+/**
+ * Remove a function from the list of functions called when logging
+ */
 void LogTargetRemove(LogTarget function, void* data)
 {
     unsigned int i;
@@ -64,11 +59,10 @@ void LogTargetRemove(LogTarget function, void* data)
     }
 }
 
-//------------------------------------------------
-// LogMessage
-//
-// The primary worker for this whole deal; gets the information, formats
-// the message, and sends it out to the receivers.
+/**
+ * The primary worker for this whole deal; gets the information, formats the message, and sends it
+ * out to the receivers.
+ */
 void LogMessage(LogType type, const char* file, const unsigned int line, const char* message, ...)
 {
     static char staticBuffer[k_bufferSize];

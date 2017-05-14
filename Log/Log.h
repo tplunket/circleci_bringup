@@ -1,12 +1,9 @@
-/*- Log.h --------------------------------------------------------------------*\
-|
-|   Contents:   A simple logging system.
-|
-|   Author:     Tom Plunket <tom@mightysprite.com>
-|
-|   Copyright:  (c) 2010 Tom Plunket, all rights reserved
-|
-\*----------------------------------------------------------------------------*/
+/**
+ * A simple logging system.
+ *
+ * \author Tom Plunket <tom@mightysprite.com>
+ * \copyright (c) 2010 Tom Plunket, all rights reserved
+ */
 
 #ifndef Log_h
 #define Log_h
@@ -15,30 +12,28 @@
 extern "C" {
 #endif
 
-//----------------------------------------------------------
-// The following macros encompass the bulk of the API.
-//
-// They're used like printf, and they hit all of the targets that have
-// been configured.  Those targets can then format the message however
-// they like, although the "complicated bit," where the message parameters
-// are inserted, are done internally.  I.e. the message is formatted.
-//
-//    Error("Oh no, we had %d errors!", numErrors);
-//
-// will result in the log target getting the string fully built, and with
-// a newline stuck on the end.
+/**
+ * The following macros encompass the bulk of the API.
+ *
+ * They're used like printf, and they hit all of the targets that have been configured.  Those
+ * targets can then format the message however they like, although the "complicated bit," where the
+ * message parameters are inserted, is done internally.  I.e. the message is formatted.
+ *
+ * <code>Error("Oh no, we had %d errors!", numErrors);</code>
+ *
+ * ...will result in the log target getting the string fully built, and with a newline stuck on the
+ * end.
+ */
 #define Error(...)    LogMessage(k_logError,   __FILE__, __LINE__, __VA_ARGS__)
 #define Warning(...)  LogMessage(k_logWarning, __FILE__, __LINE__, __VA_ARGS__)
 #define Info(...)     LogMessage(k_logInfo,    __FILE__, __LINE__, __VA_ARGS__)
 #define Spew(...)     LogMessage(k_logSpew,    __FILE__, __LINE__, __VA_ARGS__)
 
-//----------------------------------------------------------
-// LogType
-//
-// This enumeration is used by the above macros to feed to the
-// LogMessage function to indicate the severity of the message.
-// Different targets may choose to respond differently to
-// the different severity levels.
+/**
+ * This enumeration is used by the above macros to feed to the LogMessage function to indicate the
+ * severity of the message. Different targets may choose to respond differently to the different
+ * severity levels.
+ */
 enum LogType_
 {
     k_logError,
@@ -50,17 +45,15 @@ enum LogType_
 };
 typedef enum LogType_ LogType;
 
-//----------------------------------------------------------
-// Log Targets
-//
-// The API to add and remove Log Targets; each Log Target
-// will be called for each log message generated.
+/**
+ * The API to add and remove Log Targets; each Log Target will be called for each log message
+ * generated.
+ */
 typedef void(*LogTarget)(char const* m, LogType lt, char const* file, unsigned int line, void* d);
 void LogTargetAdd(LogTarget function, void* data);
 void LogTargetRemove(LogTarget function, void* data);
 
-//----------------------------------------------------------
-// Log one message; normally this function won't be called directly
+/// Log one message; normally this function won't be called directly
 void LogMessage(LogType type, char const* file, const unsigned int line, char const* message, ...);
 
 #if __cplusplus
