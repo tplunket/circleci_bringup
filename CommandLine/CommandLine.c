@@ -3,9 +3,13 @@
  *
  * \author Tom Plunket <tom@mightysprite.com>
  * \copyright (c) 2017 Tom Plunket, all rights reserved
+ *
+ * Licensed under the MIT/X license. Do with these files what you will.
  */
 
 #include "CommandLine.h"
+
+#include "Log/Log.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -16,6 +20,7 @@
 enum OptionType
 {
     OT_COUNTER,
+    OT_INTEGER,
     OT_NUM_TYPES
 };
 
@@ -35,6 +40,7 @@ struct CommandLineOption
  */
 typedef int (*LoadParameters)(struct CommandLineOption*, char const**);
 static int LoadCountingParameters(struct CommandLineOption*, const char**);
+static int LoadIntegerParameters(struct CommandLineOption*, const char**);
 
 /**
  * Static data that hooks option types up to their handlers.
@@ -48,6 +54,7 @@ struct OptionTypeData
 static struct OptionTypeData s_optionTypeData[] =
 {
     { 0, LoadCountingParameters },
+    { 1, LoadIntegerParameters },
 };
 
 /**
@@ -87,12 +94,33 @@ void CL_Destroy(CommandLineProcessor clp)
 }
 
 /**
- * Add a boolean option to the CommandLineProcessor.
+ * Add a counting option to the CommandLineProcessor.
+ *
+ * A counting option adds one to \c *value each time it appears on the command line. This is
+ * typically used to implement boolean options but a count of the number of times the option appears
+ * is an easy extension.
  */
 void CL_AddCountingOption(CommandLineProcessor clp, int* value, char const* name)
 {
     struct CommandLineOption* clo = (struct CommandLineOption*)malloc(sizeof(struct CommandLineOption));
     clo->type = OT_COUNTER;
+    clo->name = name;
+    clo->value = value;
+    clo->next = clp->options;
+    clp->options = clo;
+
+    *value = 0;
+}
+
+/**
+ * Add an integer option to the CommandLineProcessor.
+ *
+ * The value following the option is loaded into \c *value.
+ */
+void CL_AddIntegerOption(CommandLineProcessor clp, int* value, char const* name)
+{
+    struct CommandLineOption* clo = (struct CommandLineOption*)malloc(sizeof(struct CommandLineOption));
+    clo->type = OT_INTEGER;
     clo->name = name;
     clo->value = value;
     clo->next = clp->options;
@@ -115,8 +143,9 @@ char const* CL_GetAppName(CommandLineProcessor clp)
 int CL_Parse(CommandLineProcessor clp, int argc, char const** argv)
 {
     clp->appName = argv[0];
+    int numErrors = 0;
 
-    for (int i = 0; i < argc; ++i)
+    for (int i = 1; i < argc; ++i)
     {
         char const* arg = argv[i];
         if ((arg[0] == '-') || (arg[0] == '/'))
@@ -126,11 +155,37 @@ int CL_Parse(CommandLineProcessor clp, int argc, char const** argv)
                 o = o->next;
 
             if (o != NULL)
-                s_optionTypeData[o->type].loadParameters(o, NULL);
+            {
+                struct OptionTypeData const* otd = &s_optionTypeData[o->type];
+                int numArgsLeft = argc - (i + 1);
+                if (numArgsLeft >= otd->numParameters)
+                {
+                    int paramsLoaded = otd->loadParameters(o, &argv[i+1]);
+                    if (paramsLoaded != otd->numParameters)
+                        ++numErrors;
+                    i += paramsLoaded;
+                }
+                else
+                {
+                    Error("Command line option -%s requires %d parameters but only %d are "
+                          "available.", arg, otd->numParameters, numArgsLeft);
+                    ++numErrors;
+                }
+            }
+            else
+            {
+                Error("Unknown option '%s'.", arg);
+                ++numErrors;
+            }
+        }
+        else
+        {
+            Error("Parameter '%s' can't be handled.", arg);
+            ++numErrors;
         }
     }
 
-    return argc;
+    return numErrors == 0;
 }
 
 /**
@@ -139,6 +194,34 @@ int CL_Parse(CommandLineProcessor clp, int argc, char const** argv)
 int LoadCountingParameters(struct CommandLineOption* o, char const** params)
 {
     *(int*)(o->value) += 1;
-    return 1;
+    return 0;
+}
+
+/**
+ * Load parameters into the OT_INTEGER command line option.
+ */
+int LoadIntegerParameters(struct CommandLineOption* o, char const** params)
+{
+    int *v = (int*)(o->value);
+    char const* p = params[0];
+
+    int negator = 1;
+    if (*p == '-')
+    {
+        negator = -1;
+        ++p;
+    }
+
+    while ((*p != '\0') && (*p >= '0') && (*p <= '9'))
+    {
+        *v = (*v * 10) + (*p - '0');
+        ++p;
+    }
+
+    if (*p != '\0')
+        Error("'%s' is not a valid parameter to '-%s'.", params[0], o->name);
+
+    *v *= negator;
+    return (*p == '\0') ? 1 : 0;
 }
 

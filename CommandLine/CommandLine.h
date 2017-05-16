@@ -5,6 +5,8 @@
  *
  * \author Tom Plunket <tom@mightysprite.com>
  * \copyright (c) 2017 Tom Plunket, all rights reserved
+ *
+ * Licensed under the MIT/X license. Do with these files what you will.
  */
 
 #ifdef __cplusplus
@@ -19,6 +21,7 @@ CommandLineProcessor CL_Create();
 void CL_Destroy(CommandLineProcessor);
 
 void CL_AddCountingOption(CommandLineProcessor, int* value, char const* name);
+void CL_AddIntegerOption(CommandLineProcessor, int* value, char const* name);
 
 char const* CL_GetAppName(CommandLineProcessor);
 int CL_Parse(CommandLineProcessor, int argc, char const** argv);
