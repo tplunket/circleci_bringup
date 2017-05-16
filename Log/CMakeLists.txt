@@ -1,3 +1,8 @@
+# \author Tom Plunket <tom@mightysprite.com>
+# \copyright (c) 2017 Tom Plunket, all rights reserved
+#
+# Licensed under the MIT/X license. Do with these files what you will.
+
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_C_STANDARD 99)

@@ -3,6 +3,8 @@
  *
  * \author Tom Plunket <tom@mightysprite.com>
  * \copyright (c) 2017 Tom Plunket, all rights reserved
+ *
+ * Licensed under the MIT/X license. Do with these files what you will.
  */
 
 #include "LogTarget.hpp"
