@@ -9,4 +9,5 @@ if [ ! -d $OUTDIR ]
     fi
 
 cd $OUTDIR
-cmake -DUSE_wchar_t=off ../../$PROJECT/ && make && ./${PROJECT}Tests
+#cmake -DUSE_wchar_t=off ../../$PROJECT/ && make && ./${PROJECT}Tests
+cmake ../../$PROJECT/ && make && ./${PROJECT}Tests
