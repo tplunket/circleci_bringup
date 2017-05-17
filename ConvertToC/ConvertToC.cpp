@@ -20,6 +20,8 @@
  * Licensed under the MIT/X license. Do with these files what you will but leave this header intact.
  */
 
+#include "CommandLine/CommandLine.hpp"
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -29,7 +31,6 @@
 
 // Visual Studio supports strings up to about 16k IIRC. Other compilers may have different limits.
 static int const MAX_STRING_LENGTH = 15000;
-static bool const BULK_AS_CHARACTERS = false;
 
 std::map<char, std::string> CHARACTER_TRANSLATIONS;
 enum ExportType
@@ -73,7 +74,7 @@ void GenerateTranslations(ExportType style, bool asHex=false)
             for (int i = 0; i < 256; ++i)
             {
                 std::ostringstream oss;
-                oss << "\\x" << std::setw(2) << std::setfill('0') << std::hex << i;
+                oss << "\\x" << std::setw(2) << std::setfill('0') << std::hex << i << ',';
                 CHARACTER_TRANSLATIONS[i] = oss.str();
             }
         }
@@ -82,7 +83,7 @@ void GenerateTranslations(ExportType style, bool asHex=false)
             for (int i = 0; i < 256; ++i)
             {
                 std::ostringstream oss;
-                oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << i;
+                oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << i << ',';
                 CHARACTER_TRANSLATIONS[i] = oss.str();
             }
         }
@@ -91,7 +92,7 @@ void GenerateTranslations(ExportType style, bool asHex=false)
             for (int i = 0; i < 256; ++i)
             {
                 std::ostringstream oss;
-                oss << std::setw(3) << i;
+                oss << std::setw(3) << i << ',';
                 CHARACTER_TRANSLATIONS[i] = oss.str();
             }
         }
@@ -100,7 +101,7 @@ void GenerateTranslations(ExportType style, bool asHex=false)
             for (int i = 0; i < 256; ++i)
             {
                 std::ostringstream oss;
-                oss << std::setw(4) << i;
+                oss << std::setw(4) << i << ',';
                 CHARACTER_TRANSLATIONS[i] = oss.str();
             }
         }
@@ -111,19 +112,19 @@ void GenerateTranslations(ExportType style, bool asHex=false)
             for (char c = 32; c < 127; ++c)
             {
                 std::ostringstream oss;
-                oss << " '" << c << "'";
+                oss << " '" << c << "',";
                 CHARACTER_TRANSLATIONS[c] = oss.str();
             }
 
             // and then handle these characters specially.
-            CHARACTER_TRANSLATIONS[' '] = " ' '";
-            CHARACTER_TRANSLATIONS['"'] = " '\"'";
-            CHARACTER_TRANSLATIONS['\''] = "'\\''";
-            CHARACTER_TRANSLATIONS['\\'] = "'\\\\'";
-            CHARACTER_TRANSLATIONS['\n'] = "'\\n'";
-            CHARACTER_TRANSLATIONS['\r'] = "'\\r'";
-            CHARACTER_TRANSLATIONS['\t'] = "'\\t'";
-            CHARACTER_TRANSLATIONS['\0'] = "'\\0'";
+            CHARACTER_TRANSLATIONS[' '] = " ' ',";
+            CHARACTER_TRANSLATIONS['"'] = " '\"',";
+            CHARACTER_TRANSLATIONS['\''] = "'\\'',";
+            CHARACTER_TRANSLATIONS['\\'] = "'\\\\',";
+            CHARACTER_TRANSLATIONS['\n'] = "'\\n',";
+            CHARACTER_TRANSLATIONS['\r'] = "'\\r',";
+            CHARACTER_TRANSLATIONS['\t'] = "'\\t',";
+            CHARACTER_TRANSLATIONS['\0'] = "'\\0',";
         }
     }
 }
@@ -149,24 +150,27 @@ std::string Convert(std::string const& data)
 
 std::string FormatAsString(std::string const& data, std::string const& dataName)
 {
-    auto lines = Convert(data);
+    std::string lines = Convert(data);
     // substitute pairs of question marks to avoid errant trigraph interpretation by the compiler.
     // http://en.wikipedia.org/wiki/Digraphs_and_trigraphs
-    //output = re.sub(r"[?]{2}([=/'()!<>-])", r'?\\?\1', lines)
-    //output = '    "%s"' % output
-    //return output
-    return lines;
+    size_t match = lines.find("??");
+    std::string trigraphs = "=/'()!<>-";
+    while (match != std::string::npos)
+    {
+        if (trigraphs.find(lines[match+2]) != std::string::npos)
+            lines.replace(match, 2, "?\\?");
+        match = lines.find("??", match+1);
+    }
+    std::ostringstream oss;
+    oss << "\t\"" << lines << '"';
+    return oss.str();
 }
 
 std::string FormatAsData(std::string const& data, std::string const& dataName)
 {
     std::vector<std::string> output { "{" };
 
-    // put a NULL at the end in case the string is used as a string; it doesn't
-    // count into the length that we printed before though.
-    auto new_data = Convert(data);
-    new_data.append(CHARACTER_TRANSLATIONS['\0']);
-    size_t dataLen = new_data.size();
+    size_t dataLen = data.size();
     size_t current = 0;
     while (current < dataLen)
     {
@@ -174,11 +178,19 @@ std::string FormatAsData(std::string const& data, std::string const& dataName)
         if ((current % 1024) == 0)
             oss << "    /* byte " << current << " */" << std::endl;
         oss << "    ";
-        for (int i = 0; i < 16; ++i)
-            oss << data[current+i] << ',';
+        for (int i = 0; (i < 16) && ((current + i) < dataLen); ++i)
+        {
+            if (i > 0)
+                oss << ' ';
+            oss << CHARACTER_TRANSLATIONS[data[current+i]];
+        }
+        output.push_back(oss.str());
         current += 16;
     }
 
+    // put a NULL at the end in case the string is used as a string; it doesn't
+    // count into the length that we printed before though.
+    output.push_back("    0");
     output.push_back("}");
     std::ostringstream actual_output;
     for (auto line : output)
@@ -188,9 +200,14 @@ std::string FormatAsData(std::string const& data, std::string const& dataName)
     return actual_output.str();
 }
 
-int Main(std::string const& inputFile, std::string const& outputFile)
+int Main(std::string const& inputFile, std::string const& outputFile, bool asBinary, bool asHex)
 {
     std::ifstream file(inputFile, std::ios::binary | std::ios::ate);
+    if (!file.good())
+    {
+        std::cerr << "Couldn't open file " << inputFile << ".";
+        return 3;
+    }
     size_t size = file.tellg();
     file.seekg(0);
     std::string contents(size, 0);
@@ -199,14 +216,14 @@ int Main(std::string const& inputFile, std::string const& outputFile)
     std::string dataName = ConvertDataName(inputFile);
     std::string output;
 
-    if (size < MAX_STRING_LENGTH)
+    if (!asBinary && !asHex && (size < MAX_STRING_LENGTH))
     {
         GenerateTranslations(AS_STRING);
         output = FormatAsString(contents, dataName);
     }
     else
     {
-        GenerateTranslations(AS_NUMBERS_AND_CHARS, true);
+        GenerateTranslations(AS_NUMBERS, asHex);
         output = FormatAsData(contents, dataName);
     }
 
@@ -223,19 +240,30 @@ int Main(std::string const& inputFile, std::string const& outputFile)
 
 int main(int argc, char const** argv)
 {
-    if (argc == 1)
+    char const* infile, *outfile;
+    int asBinary, asHex;
+
     {
-        std::cerr << "Need to give a filename.";
-        return 1;
+        CommandLine cl;
+        cl.AddArgument(&infile);
+        cl.AddArgument(&outfile);
+        cl.AddCountingOption(&asBinary, "b");
+        cl.AddCountingOption(&asBinary, "bin");
+        cl.AddCountingOption(&asBinary, "binary");
+        cl.AddCountingOption(&asHex, "h");
+        cl.AddCountingOption(&asHex, "hex");
+        if (!cl.Parse(argc, argv) || (infile == nullptr))
+        {
+            std::cerr << "Need to give a filename.";
+            return 1;
+        }
     }
+
+    std::string sinfile = infile;
+    std::string soutfile;
+    if (outfile != nullptr)
+        soutfile = outfile;
     else
-    {
-        std::string infile = argv[1];
-        std::string outfile;
-        if (argc > 2)
-            outfile = argv[2];
-        else
-            outfile = infile + ".c";
-        return Main(infile, outfile);
-    }
+        soutfile = sinfile + ".c";
+    return Main(sinfile, soutfile, asBinary, asHex);
 }
