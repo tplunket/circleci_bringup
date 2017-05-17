@@ -22,6 +22,15 @@ extern "C"
 {
 #endif
 
+#ifdef CL_USE_wchar_t
+#include <wchar.h>
+typedef wchar_t CL_CharType;
+#else
+typedef char CL_CharType;
+#endif
+
+typedef CL_CharType const* CL_StringType;
+
 struct CommandLineProcessor_;
 typedef struct CommandLineProcessor_* CommandLineProcessor;
 
@@ -30,18 +39,18 @@ CommandLineProcessor CL_Create();
 void CL_Destroy(CommandLineProcessor);
 
 /// Options
-void CL_AddCountingOption(CommandLineProcessor, int* value, char const* name);
-void CL_AddIntegerOption(CommandLineProcessor, int* value, char const* name);
-void CL_AddStringOption(CommandLineProcessor, char const** value, char const* name);
+void CL_AddCountingOption(CommandLineProcessor, int* value, CL_StringType name);
+void CL_AddIntegerOption(CommandLineProcessor, int* value, CL_StringType name);
+void CL_AddStringOption(CommandLineProcessor, CL_StringType* value, CL_StringType name);
 
 /// Arguments
-void CL_AddArgument(CommandLineProcessor, char const** value);
+void CL_AddArgument(CommandLineProcessor, CL_StringType* value);
 void CL_EnableOverflowArguments(CommandLineProcessor);
-char const** CL_GetOverflowArguments(CommandLineProcessor);
+CL_StringType* CL_GetOverflowArguments(CommandLineProcessor);
 
 /// Post
-char const* CL_GetAppName(CommandLineProcessor);
-int CL_Parse(CommandLineProcessor, int argc, char const** argv);
+CL_StringType CL_GetAppName(CommandLineProcessor);
+int CL_Parse(CommandLineProcessor, int argc, CL_StringType* argv);
 
 #ifdef __cplusplus
 } // extern "C"

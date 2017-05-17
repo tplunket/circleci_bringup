@@ -19,28 +19,28 @@ public:
     CommandLine() : processor(CL_Create()) {}
     ~CommandLine() { CL_Destroy(processor); }
 
-    void AddCountingOption(int* value, char const* name)
+    void AddCountingOption(int* value, CL_StringType name)
         { CL_AddCountingOption(processor, value, name); }
-    void AddIntegerOption(int* value, char const* name)
+    void AddIntegerOption(int* value, CL_StringType name)
         { CL_AddIntegerOption(processor, value, name); }
-    void AddStringOption(char const** value, char const* name)
+    void AddStringOption(CL_StringType* value, CL_StringType name)
         { CL_AddStringOption(processor, value, name); }
-    void AddArgument(char const** value)
+    void AddArgument(CL_StringType* value)
         { CL_AddArgument(processor, value); }
     void EnableOverflowArguments()
         { CL_EnableOverflowArguments(processor); }
-    std::vector<char const*> GetOverflowArguments()
+    std::vector<CL_StringType> GetOverflowArguments()
         {
-            char const** overflow = CL_GetOverflowArguments(processor);
-            char const** end = overflow;
+            CL_StringType* overflow = CL_GetOverflowArguments(processor);
+            CL_StringType* end = overflow;
             while (*end != nullptr)
                 ++end;
             return { overflow, end };
         }
 
-    bool Parse(int argc, char const** argv) { return CL_Parse(processor, argc, argv) != 0; }
+    bool Parse(int argc, CL_StringType* argv) { return CL_Parse(processor, argc, argv) != 0; }
 
-    char const* GetApplicationName() const { return CL_GetAppName(processor); }
+    CL_StringType GetApplicationName() const { return CL_GetAppName(processor); }
 
 private:
     CommandLineProcessor processor;

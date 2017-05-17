@@ -14,6 +14,14 @@
 #include <string.h>
 #include <stdlib.h>
 
+#if CL_USE_wchar_t
+#define STRCMP wcscmp
+#define STR "%ls"
+#else
+#define STRCMP strcmp
+#define STR "%s"
+#endif
+
 /**
  * The types of options.
  */
@@ -31,7 +39,7 @@ enum OptionType
 struct CommandLineOption
 {
     enum OptionType type;
-    char const* name;
+    CL_StringType name;
     void* value;
     struct CommandLineOption* next;
 };
@@ -39,10 +47,10 @@ struct CommandLineOption
 /**
  * The functions that load option parameters.
  */
-typedef int (*LoadParametersFn)(struct CommandLineOption*, char const**);
-static int LoadCountingParameters(struct CommandLineOption*, const char**);
-static int LoadIntegerParameters(struct CommandLineOption*, const char**);
-static int LoadStringParameters(struct CommandLineOption*, const char**);
+typedef int (*LoadParametersFn)(struct CommandLineOption*, CL_StringType*);
+static int LoadCountingParameters(struct CommandLineOption*, CL_StringType*);
+static int LoadIntegerParameters(struct CommandLineOption*, CL_StringType*);
+static int LoadStringParameters(struct CommandLineOption*, CL_StringType*);
 
 /**
  * Static data that hooks option types up to their handlers.
@@ -65,7 +73,7 @@ static struct OptionTypeData s_optionTypeData[] =
  */
 struct CommandLineArgument
 {
-    char const** value;
+    CL_StringType* value;
     struct CommandLineArgument* next;
 };
 
@@ -74,10 +82,10 @@ struct CommandLineArgument
  */
 struct CommandLineProcessor_
 {
-    char const* appName;
+    CL_StringType appName;
     struct CommandLineOption* options;
     struct CommandLineArgument* arguments;
-    char const** overflow;
+    CL_StringType* overflow;
 };
 
 /**
@@ -129,7 +137,7 @@ void CL_Destroy(CommandLineProcessor clp)
  * typically used to implement boolean options but a count of the number of times the option appears
  * is an easy extension.
  */
-void CL_AddCountingOption(CommandLineProcessor clp, int* value, char const* name)
+void CL_AddCountingOption(CommandLineProcessor clp, int* value, CL_StringType name)
 {
     struct CommandLineOption* clo = malloc(sizeof(struct CommandLineOption));
     clo->type = OT_COUNTER;
@@ -146,7 +154,7 @@ void CL_AddCountingOption(CommandLineProcessor clp, int* value, char const* name
  *
  * The value following the option is loaded into \c *value.
  */
-void CL_AddIntegerOption(CommandLineProcessor clp, int* value, char const* name)
+void CL_AddIntegerOption(CommandLineProcessor clp, int* value, CL_StringType name)
 {
     struct CommandLineOption* clo = malloc(sizeof(struct CommandLineOption));
     clo->type = OT_INTEGER;
@@ -163,7 +171,7 @@ void CL_AddIntegerOption(CommandLineProcessor clp, int* value, char const* name)
  *
  * The value following the option is loaded into \c *value.
  */
-void CL_AddStringOption(CommandLineProcessor clp, char const** value, char const* name)
+void CL_AddStringOption(CommandLineProcessor clp, CL_StringType* value, CL_StringType name)
 {
     struct CommandLineOption* clo = malloc(sizeof(struct CommandLineOption));
     clo->type = OT_STRING;
@@ -178,7 +186,7 @@ void CL_AddStringOption(CommandLineProcessor clp, char const** value, char const
 /**
  * Add a argument for the command line.
  */
-void CL_AddArgument(CommandLineProcessor clp, char const** value)
+void CL_AddArgument(CommandLineProcessor clp, CL_StringType* value)
 {
     struct CommandLineArgument* cla = malloc(sizeof(struct CommandLineArgument));
     cla->value = value;
@@ -201,7 +209,7 @@ void CL_EnableOverflowArguments(CommandLineProcessor clp)
 {
     if (clp->overflow == NULL)
     {
-        clp->overflow = malloc(sizeof(char const*));
+        clp->overflow = malloc(sizeof(CL_StringType));
         *(clp->overflow) = NULL;
     }
 }
@@ -209,7 +217,7 @@ void CL_EnableOverflowArguments(CommandLineProcessor clp)
 /**
  * Get the overflow arguments.
  */
-char const** CL_GetOverflowArguments(CommandLineProcessor clp)
+CL_StringType* CL_GetOverflowArguments(CommandLineProcessor clp)
 {
     return clp->overflow;
 }
@@ -217,7 +225,7 @@ char const** CL_GetOverflowArguments(CommandLineProcessor clp)
 /**
  * Get the application's name.
  */
-char const* CL_GetAppName(CommandLineProcessor clp)
+CL_StringType CL_GetAppName(CommandLineProcessor clp)
 {
     return clp->appName;
 }
@@ -225,7 +233,7 @@ char const* CL_GetAppName(CommandLineProcessor clp)
 /**
  * Do the parse.
  */
-int CL_Parse(CommandLineProcessor clp, int argc, char const** argv)
+int CL_Parse(CommandLineProcessor clp, int argc, CL_StringType* argv)
 {
     clp->appName = argv[0];
     int numErrors = 0;
@@ -235,17 +243,17 @@ int CL_Parse(CommandLineProcessor clp, int argc, char const** argv)
     if (clp->overflow != NULL)
     {
         free(clp->overflow);
-        clp->overflow = malloc(sizeof(char const*) * argc);
+        clp->overflow = malloc(sizeof(CL_StringType) * argc);
     }
-    char const** overflow = clp->overflow;
+    CL_StringType* overflow = clp->overflow;
 
     for (int i = 1; i < argc; ++i)
     {
-        char const* arg = argv[i];
+        CL_StringType arg = argv[i];
         if ((arg[0] == '-') || (arg[0] == '/'))
         {
             struct CommandLineOption* o = clp->options;
-            while ((o != NULL) && (strcmp(o->name, arg+1) != 0))
+            while ((o != NULL) && (STRCMP(o->name, arg+1) != 0))
                 o = o->next;
 
             if (o != NULL)
@@ -261,14 +269,14 @@ int CL_Parse(CommandLineProcessor clp, int argc, char const** argv)
                 }
                 else
                 {
-                    Error("Command line option -%s requires %d parameters but only %d are "
+                    Error("Command line option '" STR "' requires %d parameters but only %d are "
                           "available.", arg, otd->numParameters, numArgsLeft);
                     ++numErrors;
                 }
             }
             else
             {
-                Error("Unknown option '%s'.", arg);
+                Error("Unknown option '" STR "'.", arg);
                 ++numErrors;
             }
         }
@@ -286,7 +294,7 @@ int CL_Parse(CommandLineProcessor clp, int argc, char const** argv)
             }
             else
             {
-                Error("Argument '%s' can't be handled.", arg);
+                Error("Argument '" STR "' can't be handled.", arg);
                 ++numErrors;
             }
         }
@@ -303,7 +311,7 @@ int CL_Parse(CommandLineProcessor clp, int argc, char const** argv)
 /**
  * Load parameters into the OT_COUNTER command line option.
  */
-int LoadCountingParameters(struct CommandLineOption* o, char const** params)
+int LoadCountingParameters(struct CommandLineOption* o, CL_StringType* params)
 {
     *(int*)(o->value) += 1;
     return 0;
@@ -312,10 +320,10 @@ int LoadCountingParameters(struct CommandLineOption* o, char const** params)
 /**
  * Load parameters into the OT_INTEGER command line option.
  */
-int LoadIntegerParameters(struct CommandLineOption* o, char const** params)
+int LoadIntegerParameters(struct CommandLineOption* o, CL_StringType* params)
 {
     int *v = o->value;
-    char const* p = params[0];
+    CL_StringType p = params[0];
 
     int negator = 1;
     if (*p == '-')
@@ -331,7 +339,7 @@ int LoadIntegerParameters(struct CommandLineOption* o, char const** params)
     }
 
     if (*p != '\0')
-        Error("'%s' is not a valid parameter to '-%s'.", params[0], o->name);
+        Error("'" STR "' is not a valid parameter to '-" STR "'.", params[0], o->name);
 
     *v *= negator;
     return (*p == '\0') ? 1 : 0;
@@ -340,10 +348,10 @@ int LoadIntegerParameters(struct CommandLineOption* o, char const** params)
 /**
  * Load parameters into the OT_STRING command line option.
  */
-int LoadStringParameters(struct CommandLineOption* o, char const** params)
+int LoadStringParameters(struct CommandLineOption* o, CL_StringType* params)
 {
-    char const** v = o->value;
-    char const* p = params[0];
+    CL_StringType* v = o->value;
+    CL_StringType p = params[0];
     *v = p;
     return 1;
 }

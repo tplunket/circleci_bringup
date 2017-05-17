@@ -3,11 +3,16 @@
 #
 # Licensed under the MIT/X license. Do with these files what you will.
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 set(CMAKE_CXX_STANDARD 11)
 #set(CMAKE_C_STANDARD 99)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+option(USE_wchar_t "Use wchar_t instead of char" off)
+if (USE_wchar_t)
+    add_definitions("-DCL_USE_wchar_t")
+endif(USE_wchar_t)
 
 project(CommandLine)
 project(CommandLineTests)
