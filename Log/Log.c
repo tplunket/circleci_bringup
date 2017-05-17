@@ -43,7 +43,7 @@ void LogTargetAdd(LogTargetFn function, void* data)
     }
 
     {
-        struct LogTargetData* ltd = (struct LogTargetData*)malloc(sizeof(struct LogTargetData));
+        struct LogTargetData* ltd = malloc(sizeof(struct LogTargetData));
         ltd->function = function;
         ltd->data = data;
         ltd->next = NULL;
