@@ -124,7 +124,7 @@ void CL_Destroy(CommandLineProcessor clp)
 
     if (clp->overflow != NULL)
     {
-        free(clp->overflow);
+        free((void*)clp->overflow);
     }
 
     free(clp);
@@ -176,7 +176,7 @@ void CL_AddStringOption(CommandLineProcessor clp, CL_StringType* value, CL_Strin
     struct CommandLineOption* clo = malloc(sizeof(struct CommandLineOption));
     clo->type = OT_STRING;
     clo->name = name;
-    clo->value = value;
+    clo->value = (void*)value;
     clo->next = clp->options;
     clp->options = clo;
 
@@ -242,7 +242,7 @@ int CL_Parse(CommandLineProcessor clp, int argc, CL_StringType* argv)
 
     if (clp->overflow != NULL)
     {
-        free(clp->overflow);
+        free((void*)clp->overflow);
         clp->overflow = malloc(sizeof(CL_StringType) * argc);
     }
     CL_StringType* overflow = clp->overflow;
