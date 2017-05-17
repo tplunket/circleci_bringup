@@ -65,13 +65,24 @@ TEST_CASE( "Log targets get called with data pointer." )
 
     SECTION( "Add multiple targets." )
     {
+        bool cGotCalled, dGotCalled, eGotCalled;
         LogTargetAdd(targetFunction, &aGotCalled);
         LogTargetAdd(targetFunction, &bGotCalled);
-        Warning("Call both functions.");
+        LogTargetAdd(targetFunction, &cGotCalled);
+        LogTargetAdd(targetFunction, &dGotCalled);
+        LogTargetAdd(targetFunction, &eGotCalled);
+        Warning("Call all targets.");
         REQUIRE(aGotCalled);
         REQUIRE(bGotCalled);
-        LogTargetRemove(targetFunction, &aGotCalled);
+        REQUIRE(cGotCalled);
+        REQUIRE(dGotCalled);
+        REQUIRE(eGotCalled);
+        // now remove them in awkward order
+        LogTargetRemove(targetFunction, &cGotCalled);
+        LogTargetRemove(targetFunction, &dGotCalled);
         LogTargetRemove(targetFunction, &bGotCalled);
+        LogTargetRemove(targetFunction, &eGotCalled);
+        LogTargetRemove(targetFunction, &aGotCalled);
     }
 }
 
