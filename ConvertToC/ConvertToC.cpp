@@ -21,7 +21,7 @@
  */
 
 #include "CommandLine/CommandLine.hpp"
-#include "Log/LogTarget.hpp"
+#include "Log/StdStreamLogTarget.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -33,18 +33,6 @@
 
 // Visual Studio supports strings up to about 16k IIRC. Other compilers may have different limits.
 static int const MAX_STRING_LENGTH = 15000;
-
-struct MyLogTarget : public LogTarget
-{
-private:
-	void LogMessage(char const* message, LogType lt, char const* f, unsigned int l)
-	{
-		if (lt < k_logError)
-			std::cout << message;
-		else
-			std::cerr << message;
-	}
-};
 
 std::map<char, std::string> CHARACTER_TRANSLATIONS;
 enum ExportType
@@ -255,7 +243,7 @@ int Main(std::string const& inputFile, std::string const& outputFile, bool asBin
 
 int main(int argc, char const** argv)
 {
-	MyLogTarget mlt;
+	StdStreamLogTarget lt;
 
     char const* infile, *outfile;
     int asBinary, asHex;
