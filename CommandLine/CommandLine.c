@@ -36,9 +36,9 @@ struct CommandLineOption
 };
 
 /**
- * The functions that load parameters.
+ * The functions that load option parameters.
  */
-typedef int (*LoadParameters)(struct CommandLineOption*, char const**);
+typedef int (*LoadParametersFn)(struct CommandLineOption*, char const**);
 static int LoadCountingParameters(struct CommandLineOption*, const char**);
 static int LoadIntegerParameters(struct CommandLineOption*, const char**);
 
@@ -48,7 +48,7 @@ static int LoadIntegerParameters(struct CommandLineOption*, const char**);
 struct OptionTypeData
 {
     int numParameters;
-    LoadParameters loadParameters;
+    LoadParametersFn loadParameters;
 };
 
 static struct OptionTypeData s_optionTypeData[] =
@@ -58,12 +58,23 @@ static struct OptionTypeData s_optionTypeData[] =
 };
 
 /**
+ * Command line arguments.
+ */
+struct CommandLineArgument
+{
+    char const** value;
+    struct CommandLineArgument* next;
+};
+
+/**
  * The core opaque structure that gets returned.
  */
 struct CommandLineProcessor_
 {
     char const* appName;
     struct CommandLineOption* options;
+    struct CommandLineArgument* arguments;
+    char const** overflow;
 };
 
 /**
@@ -71,9 +82,11 @@ struct CommandLineProcessor_
  */
 CommandLineProcessor CL_Create()
 {
-    CommandLineProcessor clp = (CommandLineProcessor)malloc(sizeof(struct CommandLineProcessor_));
+    CommandLineProcessor clp = malloc(sizeof(struct CommandLineProcessor_));
     clp->appName = NULL;
     clp->options = NULL;
+    clp->arguments = NULL;
+    clp->overflow = NULL;
     return clp;
 }
 
@@ -90,6 +103,19 @@ void CL_Destroy(CommandLineProcessor clp)
         free(delete_me);
     }
 
+    struct CommandLineArgument* cla = clp->arguments;
+    while (cla != NULL)
+    {
+        struct CommandLineArgument* delete_me = cla;
+        cla = cla->next;
+        free(delete_me);
+    }
+
+    if (clp->overflow != NULL)
+    {
+        free(clp->overflow);
+    }
+
     free(clp);
 }
 
@@ -102,7 +128,7 @@ void CL_Destroy(CommandLineProcessor clp)
  */
 void CL_AddCountingOption(CommandLineProcessor clp, int* value, char const* name)
 {
-    struct CommandLineOption* clo = (struct CommandLineOption*)malloc(sizeof(struct CommandLineOption));
+    struct CommandLineOption* clo = malloc(sizeof(struct CommandLineOption));
     clo->type = OT_COUNTER;
     clo->name = name;
     clo->value = value;
@@ -119,7 +145,7 @@ void CL_AddCountingOption(CommandLineProcessor clp, int* value, char const* name
  */
 void CL_AddIntegerOption(CommandLineProcessor clp, int* value, char const* name)
 {
-    struct CommandLineOption* clo = (struct CommandLineOption*)malloc(sizeof(struct CommandLineOption));
+    struct CommandLineOption* clo = malloc(sizeof(struct CommandLineOption));
     clo->type = OT_INTEGER;
     clo->name = name;
     clo->value = value;
@@ -127,6 +153,45 @@ void CL_AddIntegerOption(CommandLineProcessor clp, int* value, char const* name)
     clp->options = clo;
 
     *value = 0;
+}
+
+/**
+ * Add a argument for the command line.
+ */
+void CL_AddArgument(CommandLineProcessor clp, char const** value)
+{
+    struct CommandLineArgument* cla = malloc(sizeof(struct CommandLineArgument));
+    cla->value = value;
+    cla->next = NULL;
+
+    struct CommandLineArgument** end = &clp->arguments;
+    while (*end != NULL)
+    {
+        end = &((*end)->next);
+    }
+    *end = cla;
+
+    *value = NULL;
+}
+
+/**
+ * Let the system track non-option arguments.
+ */
+void CL_EnableOverflowArguments(CommandLineProcessor clp)
+{
+    if (clp->overflow == NULL)
+    {
+        clp->overflow = malloc(sizeof(char const*));
+        *(clp->overflow) = NULL;
+    }
+}
+
+/**
+ * Get the overflow arguments.
+ */
+char const** CL_GetOverflowArguments(CommandLineProcessor clp)
+{
+    return clp->overflow;
 }
 
 /**
@@ -144,6 +209,15 @@ int CL_Parse(CommandLineProcessor clp, int argc, char const** argv)
 {
     clp->appName = argv[0];
     int numErrors = 0;
+
+    struct CommandLineArgument* cla = clp->arguments;
+
+    if (clp->overflow != NULL)
+    {
+        free(clp->overflow);
+        clp->overflow = malloc(sizeof(char const*) * argc);
+    }
+    char const** overflow = clp->overflow;
 
     for (int i = 1; i < argc; ++i)
     {
@@ -178,11 +252,29 @@ int CL_Parse(CommandLineProcessor clp, int argc, char const** argv)
                 ++numErrors;
             }
         }
+        else if (cla != NULL)
+        {
+            *(cla->value) = arg;
+            cla = cla->next;
+        }
         else
         {
-            Error("Parameter '%s' can't be handled.", arg);
-            ++numErrors;
+            if (overflow != NULL)
+            {
+                *overflow = arg;
+                ++overflow;
+            }
+            else
+            {
+                Error("Argument '%s' can't be handled.", arg);
+                ++numErrors;
+            }
         }
+    }
+
+    if (overflow != NULL)
+    {
+        *overflow = NULL;
     }
 
     return numErrors == 0;

@@ -27,7 +27,7 @@ public:
     ~TestLogTarget()
     {
         while (hasMessages())
-            std::cout << pop() << std::endl;
+            std::cout << pop(); // they have newlines already
     }
 
     std::string pop()
@@ -140,6 +140,105 @@ TEST_CASE( "CommandLine API, C Interface" )
         }
     }
 
+    SECTION( "Normal Arguments" )
+    {
+        char const* p = (char*)1;
+        CL_AddArgument(clp, &p);
+
+        SECTION( "Initialized to NULL" )
+        {
+            REQUIRE((void*)p == NULL);
+        }
+
+        SECTION( "Single" )
+        {
+            ARGS("app", "newb");
+            int rv = CL_Parse(clp, num_args, args);
+            REQUIRE(rv);
+            REQUIRE_THAT(p, Catch::Equals("newb"));
+        }
+
+        SECTION( "Multiple" )
+        {
+            const char* q;
+            CL_AddArgument(clp, &q);
+            ARGS("app", "friend", "enemy");
+            int rv = CL_Parse(clp, num_args, args);
+            REQUIRE(rv);
+            REQUIRE_THAT(p, Catch::Equals("friend"));
+            REQUIRE_THAT(q, Catch::Equals("enemy"));
+        }
+
+        SECTION( "There aren't any overflow arguments" )
+        {
+            const char** overflow = CL_GetOverflowArguments(clp);
+            REQUIRE(overflow == NULL);
+        }
+    }
+
+    SECTION( "Overflow arguments" )
+    {
+        CL_EnableOverflowArguments(clp);
+
+        SECTION( "No overflow args" )
+        {
+            SECTION( "Returns nothing if the command line hasn't been parsed yet" )
+            {
+                const char** overflow = CL_GetOverflowArguments(clp);
+                REQUIRE(overflow != NULL);
+                REQUIRE((void*)overflow[0] == NULL);
+            }
+
+            SECTION( "And nothing else" )
+            {
+                SECTION( "works ok" )
+                {
+                    ARGS("app");
+                    int rv = CL_Parse(clp, num_args, args);
+                    REQUIRE(rv);
+                }
+
+                SECTION( "so we parse the args..." )
+                {
+                    ARGS("app", "gee", "golly");
+                    int rv = CL_Parse(clp, num_args, args);
+                    REQUIRE(rv);
+                    const char** overflow = CL_GetOverflowArguments(clp);
+                    REQUIRE_THAT(overflow[0], Catch::Equals("gee"));
+                    REQUIRE_THAT(overflow[1], Catch::Equals("golly"));
+                    REQUIRE((void*)overflow[2] == NULL);
+                }
+
+                SECTION( "and unknown options still fail." )
+                {
+                    ARGS("qwertyuiop", "-aoeuidhtns");
+                    int rv = CL_Parse(clp, num_args, args);
+                    REQUIRE(!rv);
+                    REQUIRE_THAT(tlt.pop(), Catch::StartsWith("Unknown option"));
+                }
+            }
+        }
+
+        SECTION( "With other arguments" )
+        {
+            char const* a, *b, *c;
+            CL_AddArgument(clp, &a);
+            CL_AddArgument(clp, &b);
+            CL_AddArgument(clp, &c);
+
+            ARGS("go.now", "a-arg", "b-arg", "c-arg", "o-arg-0", "o-arg-1");
+            int rv = CL_Parse(clp, num_args, args);
+            REQUIRE(rv);
+            REQUIRE_THAT(a, Catch::Equals("a-arg"));
+            REQUIRE_THAT(a, Catch::Equals("a-arg"));
+            REQUIRE_THAT(a, Catch::Equals("a-arg"));
+            const char** overflow = CL_GetOverflowArguments(clp);
+            REQUIRE_THAT(overflow[0], Catch::Equals("o-arg-0"));
+            REQUIRE_THAT(overflow[1], Catch::Equals("o-arg-1"));
+            REQUIRE((void*)overflow[2] == NULL);
+        }
+    }
+
     CL_Destroy(clp);
     CHECK(!tlt.hasMessages());
 }
@@ -232,28 +331,28 @@ TEST_CASE( "C++ API" )
                 REQUIRE(my_other_val == 1);
             }
         }
+    }
 
-        SECTION( "Integer options" )
+    SECTION( "Integer options" )
+    {
+        int value;
+        cl.AddIntegerOption(&value, "v");
+
+        SECTION( "Parses correctly." )
         {
-            int value;
-            cl.AddIntegerOption(&value, "v");
+            ARGS("appName", "-v", "14");
+            bool rv = cl.Parse(num_args, args);
+            REQUIRE(rv);
+            REQUIRE(value == 14);
+        }
 
-            SECTION( "Parses correctly." )
-            {
-                ARGS("appName", "-v", "14");
-                bool rv = cl.Parse(num_args, args);
-                REQUIRE(rv);
-                REQUIRE(value == 14);
-            }
-
-            SECTION( "Extra options fail." )
-            {
-                ARGS("appName", "-v", "323", "399");
-                bool rv = cl.Parse(num_args, args);
-                REQUIRE(!rv);
-                REQUIRE(value == 323);
-                REQUIRE_THAT(tlt.pop(), Catch::EndsWith("can't be handled.\n"));
-            }
+        SECTION( "Extra options fail." )
+        {
+            ARGS("appName", "-v", "323", "399");
+            bool rv = cl.Parse(num_args, args);
+            REQUIRE(!rv);
+            REQUIRE(value == 323);
+            REQUIRE_THAT(tlt.pop(), Catch::EndsWith("can't be handled.\n"));
         }
     }
 
