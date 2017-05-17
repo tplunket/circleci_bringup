@@ -21,7 +21,9 @@
  */
 
 #include "CommandLine/CommandLine.hpp"
+#include "Log/LogTarget.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -31,6 +33,18 @@
 
 // Visual Studio supports strings up to about 16k IIRC. Other compilers may have different limits.
 static int const MAX_STRING_LENGTH = 15000;
+
+struct MyLogTarget : public LogTarget
+{
+private:
+	void LogMessage(char const* message, LogType lt, char const* f, unsigned int l)
+	{
+		if (lt < k_logError)
+			std::cout << message;
+		else
+			std::cerr << message;
+	}
+};
 
 std::map<char, std::string> CHARACTER_TRANSLATIONS;
 enum ExportType
@@ -205,7 +219,7 @@ int Main(std::string const& inputFile, std::string const& outputFile, bool asBin
     std::ifstream file(inputFile, std::ios::binary | std::ios::ate);
     if (!file.good())
     {
-        std::cerr << "Couldn't open file " << inputFile << ".";
+        std::cerr << "Couldn't open file " << inputFile << "." << std::endl;
         return 3;
     }
     size_t size = file.tellg();
@@ -235,11 +249,14 @@ int Main(std::string const& inputFile, std::string const& outputFile, bool asBin
 
     outfile << output << ";" << std::endl;
 
+	Info("%s -> %s (%d bytes)", inputFile.c_str(), outputFile.c_str(), size);
     return 0;
 }
 
 int main(int argc, char const** argv)
 {
+	MyLogTarget mlt;
+
     char const* infile, *outfile;
     int asBinary, asHex;
 
@@ -252,11 +269,17 @@ int main(int argc, char const** argv)
         cl.AddCountingOption(&asBinary, "binary");
         cl.AddCountingOption(&asHex, "h");
         cl.AddCountingOption(&asHex, "hex");
-        if (!cl.Parse(argc, argv) || (infile == nullptr))
+        if (!cl.Parse(argc, argv))
         {
-            std::cerr << "Need to give a filename.";
+			// if Parse fails, the log target gets the messages.
             return 1;
         }
+
+        if (infile == nullptr)
+		{
+            std::cerr << "Need to give a filename." << std::endl;
+			return 2;
+		}
     }
 
     std::string sinfile = infile;
@@ -265,5 +288,5 @@ int main(int argc, char const** argv)
         soutfile = outfile;
     else
         soutfile = sinfile + ".c";
-    return Main(sinfile, soutfile, asBinary, asHex);
+    return Main(sinfile, soutfile, asBinary!=0, asHex!=0);
 }
