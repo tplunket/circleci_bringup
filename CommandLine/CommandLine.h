@@ -32,6 +32,7 @@ void CL_Destroy(CommandLineProcessor);
 /// Options
 void CL_AddCountingOption(CommandLineProcessor, int* value, char const* name);
 void CL_AddIntegerOption(CommandLineProcessor, int* value, char const* name);
+void CL_AddStringOption(CommandLineProcessor, char const** value, char const* name);
 
 /// Arguments
 void CL_AddArgument(CommandLineProcessor, char const** value);

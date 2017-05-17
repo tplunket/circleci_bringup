@@ -23,6 +23,8 @@ public:
         { CL_AddCountingOption(processor, value, name); }
     void AddIntegerOption(int* value, char const* name)
         { CL_AddIntegerOption(processor, value, name); }
+    void AddStringOption(char const** value, char const* name)
+        { CL_AddStringOption(processor, value, name); }
     void AddArgument(char const** value)
         { CL_AddArgument(processor, value); }
     void EnableOverflowArguments()

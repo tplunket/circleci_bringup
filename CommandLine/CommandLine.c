@@ -21,6 +21,7 @@ enum OptionType
 {
     OT_COUNTER,
     OT_INTEGER,
+    OT_STRING,
     OT_NUM_TYPES
 };
 
@@ -41,6 +42,7 @@ struct CommandLineOption
 typedef int (*LoadParametersFn)(struct CommandLineOption*, char const**);
 static int LoadCountingParameters(struct CommandLineOption*, const char**);
 static int LoadIntegerParameters(struct CommandLineOption*, const char**);
+static int LoadStringParameters(struct CommandLineOption*, const char**);
 
 /**
  * Static data that hooks option types up to their handlers.
@@ -55,6 +57,7 @@ static struct OptionTypeData s_optionTypeData[] =
 {
     { 0, LoadCountingParameters },
     { 1, LoadIntegerParameters },
+    { 1, LoadStringParameters },
 };
 
 /**
@@ -153,6 +156,23 @@ void CL_AddIntegerOption(CommandLineProcessor clp, int* value, char const* name)
     clp->options = clo;
 
     *value = 0;
+}
+
+/**
+ * Add a string option to the CommandLineProcessor.
+ *
+ * The value following the option is loaded into \c *value.
+ */
+void CL_AddStringOption(CommandLineProcessor clp, char const** value, char const* name)
+{
+    struct CommandLineOption* clo = malloc(sizeof(struct CommandLineOption));
+    clo->type = OT_STRING;
+    clo->name = name;
+    clo->value = value;
+    clo->next = clp->options;
+    clp->options = clo;
+
+    *value = NULL;
 }
 
 /**
@@ -294,7 +314,7 @@ int LoadCountingParameters(struct CommandLineOption* o, char const** params)
  */
 int LoadIntegerParameters(struct CommandLineOption* o, char const** params)
 {
-    int *v = (int*)(o->value);
+    int *v = o->value;
     char const* p = params[0];
 
     int negator = 1;
@@ -315,5 +335,16 @@ int LoadIntegerParameters(struct CommandLineOption* o, char const** params)
 
     *v *= negator;
     return (*p == '\0') ? 1 : 0;
+}
+
+/**
+ * Load parameters into the OT_STRING command line option.
+ */
+int LoadStringParameters(struct CommandLineOption* o, char const** params)
+{
+    char const** v = o->value;
+    char const* p = params[0];
+    *v = p;
+    return 1;
 }
 

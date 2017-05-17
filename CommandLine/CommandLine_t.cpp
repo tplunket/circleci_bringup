@@ -140,6 +140,25 @@ TEST_CASE( "CommandLine API, C Interface" )
         }
     }
 
+    SECTION( "String options" )
+    {
+        char const* q = (char*)1;
+        CL_AddStringOption(clp, &q, "q");
+
+        SECTION( "Initialized to NULL" )
+        {
+            REQUIRE(q == NULL);
+        }
+
+        SECTION( "Grab the value" )
+        {
+            ARGS("application", "-q", "quickly");
+            int rv = CL_Parse(clp, num_args, args);
+            REQUIRE(rv);
+            REQUIRE_THAT(q, Catch::Equals("quickly"));
+        }
+    }
+
     SECTION( "Normal Arguments" )
     {
         char const* p = (char*)1;
@@ -413,6 +432,7 @@ TEST_CASE( "C++ API" )
         char const* arg0, *arg1;
         int int0, int1;
         int count0, count1;
+        char const* s0, *s1;
 
         cl.EnableOverflowArguments();
 
@@ -422,11 +442,13 @@ TEST_CASE( "C++ API" )
         cl.AddIntegerOption(&int1, "1");
         cl.AddCountingOption(&count0, "c0");
         cl.AddCountingOption(&count1, "c1");
+        cl.AddStringOption(&s0, "s0");
+        cl.AddStringOption(&s1, "s1");
 
         SECTION( "Toodaloo" )
         {
             ARGS("application", "fred", "-1", "18", "-c1", "joebob", "-c0", "jaqueline", "-c1",
-                 "-c1", /*"-s1", "tags",*/ "gnargnar", "-c1");
+                 "-c1", "-s1", "tags", "gnargnar", "-c1");
             bool rv = cl.Parse(num_args, args);
             REQUIRE(rv);
             REQUIRE_THAT(arg0, Catch::Equals("fred"));
@@ -435,6 +457,8 @@ TEST_CASE( "C++ API" )
             REQUIRE(int1 == 18);
             REQUIRE(count0 == 1);
             REQUIRE(count1 == 4);
+            REQUIRE((void*)s0 == nullptr);
+            REQUIRE_THAT(s1, Catch::Equals("tags"));
 
             auto overflow = cl.GetOverflowArguments();
             REQUIRE(overflow.size() == 2);
