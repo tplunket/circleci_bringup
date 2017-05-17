@@ -356,5 +356,92 @@ TEST_CASE( "C++ API" )
         }
     }
 
+    SECTION( "Normal arguments" )
+    {
+        char const* a, *b;
+        cl.AddArgument(&a);
+        cl.AddArgument(&b);
+
+        ARGS("app", "alpha", "beta");
+        bool rv = cl.Parse(num_args, args);
+        REQUIRE(rv);
+        REQUIRE_THAT(a, Catch::Equals("alpha"));
+        REQUIRE_THAT(b, Catch::Equals("beta"));
+    }
+
+    SECTION( "Overflow arguments" )
+    {
+        cl.EnableOverflowArguments();
+
+        SECTION( "Nothing parsed, empty vector" )
+        {
+            auto overflow = cl.GetOverflowArguments();
+            REQUIRE(overflow.empty());
+        }
+
+        SECTION( "Parse a few arguments" )
+        {
+            ARGS("application", "one", "two", "three");
+            bool rv = cl.Parse(num_args, args);
+            REQUIRE(rv);
+            auto overflow = cl.GetOverflowArguments();
+            REQUIRE(overflow.size() == 3);
+            REQUIRE_THAT(overflow[0], Catch::Equals("one"));
+            REQUIRE_THAT(overflow[1], Catch::Equals("two"));
+            REQUIRE_THAT(overflow[2], Catch::Equals("three"));
+        }
+
+        SECTION( "along with normal" )
+        {
+            char const* a, *b;
+            cl.AddArgument(&a);
+            cl.AddArgument(&b);
+            ARGS("xe", "alpha", "beta", "gamma", "delta");
+            bool rv = cl.Parse(num_args, args);
+            REQUIRE(rv);
+            REQUIRE_THAT(a, Catch::Equals("alpha"));
+            REQUIRE_THAT(b, Catch::Equals("beta"));
+            auto overflow = cl.GetOverflowArguments();
+            REQUIRE(overflow.size() == 2);
+            REQUIRE_THAT(overflow[0], Catch::Equals("gamma"));
+            REQUIRE_THAT(overflow[1], Catch::Equals("delta"));
+        }
+    }
+
+    SECTION( "A little bit of everything." )
+    {
+        char const* arg0, *arg1;
+        int int0, int1;
+        int count0, count1;
+
+        cl.EnableOverflowArguments();
+
+        cl.AddArgument(&arg0);
+        cl.AddArgument(&arg1);
+        cl.AddIntegerOption(&int0, "0");
+        cl.AddIntegerOption(&int1, "1");
+        cl.AddCountingOption(&count0, "c0");
+        cl.AddCountingOption(&count1, "c1");
+
+        SECTION( "Toodaloo" )
+        {
+            ARGS("application", "fred", "-1", "18", "-c1", "joebob", "-c0", "jaqueline", "-c1",
+                 "-c1", /*"-s1", "tags",*/ "gnargnar", "-c1");
+            bool rv = cl.Parse(num_args, args);
+            REQUIRE(rv);
+            REQUIRE_THAT(arg0, Catch::Equals("fred"));
+            REQUIRE_THAT(arg1, Catch::Equals("joebob"));
+            REQUIRE(int0 == 0);
+            REQUIRE(int1 == 18);
+            REQUIRE(count0 == 1);
+            REQUIRE(count1 == 4);
+
+            auto overflow = cl.GetOverflowArguments();
+            REQUIRE(overflow.size() == 2);
+            REQUIRE_THAT(overflow[0], Catch::Equals("jaqueline"));
+            REQUIRE_THAT(overflow[1], Catch::Equals("gnargnar"));
+        }
+    }
+
     CHECK(!tlt.hasMessages());
 }
