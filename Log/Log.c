@@ -4,7 +4,7 @@
  * \author Tom Plunket <tom@mightysprite.com>
  * \copyright (c) 2010-2017 Tom Plunket, all rights reserved
  *
- * Licensed under the MIT/X license. Do with these files what you will.
+ * Licensed under the MIT/X license. Do with these files what you will but leave this header intact.
  */
 
 #include "Log.h"
