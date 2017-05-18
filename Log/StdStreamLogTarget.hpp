@@ -1,5 +1,6 @@
 /**
- * A C++ handler that simplifies setting up log targets for Log.
+ * A drop-in LogTarget that can be used for basic message logging in
+ * applications that use the C++ standard library.
  *
  * \author Tom Plunket <tom@mightysprite.com>
  * \copyright (c) 2010-2017 Tom Plunket, all rights reserved
@@ -18,13 +19,13 @@ struct StdStreamLogTarget : public LogTarget
     StdStreamLogTarget(bool annotate=false) : annotate(annotate) {}
 
 private:
-	void LogMessage(char const* message, LogType lt, char const* file, unsigned int line)
-	{
+    void LogMessage(char const* message, LogType lt, char const* file, unsigned int line)
+    {
         std::ostream& s = (lt < k_logError) ? std::cout : std::cerr;
         if (annotate)
             s << file << '(' << line << "): ";
         s << message;
-	}
+    }
 
     bool annotate;
 };

@@ -1,5 +1,6 @@
 /**
- * A C++ handler that simplifies setting up log targets for Log.
+ * A drop-in LogTarget that can be used for basic message logging in
+ * applications that use libc or the otherwise standard C runtime library.
  *
  * \author Tom Plunket <tom@mightysprite.com>
  * \copyright (c) 2017 Tom Plunket, all rights reserved
@@ -15,18 +16,18 @@
 
 struct PrintfLogTarget : public LogTarget
 {
-	explicit PrintfLogTarget(bool annotate=false) : annotate(annotate) {}
+    explicit PrintfLogTarget(bool annotate=false) : annotate(annotate) {}
 
 private:
-	void LogMessage(char const* message, LogType lt, char const* file, unsigned int line)
-	{
-		if (annotate)
-			printf("%s(%d): %s", file, line, message);
-		else
-			printf("%s", message);
-	}
+    void LogMessage(char const* message, LogType lt, char const* file, unsigned int line)
+    {
+        if (annotate)
+            printf("%s(%d): %s", file, line, message);
+        else
+            printf("%s", message);
+    }
 
-	bool annotate;
+    bool annotate;
 };
 
 #endif // ndef PrintfLogTarget_hpp
