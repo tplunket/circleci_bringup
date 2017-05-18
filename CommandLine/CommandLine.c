@@ -29,6 +29,7 @@ enum OptionType
 {
     OT_COUNTER,
     OT_INTEGER,
+    OT_FLOAT,
     OT_STRING,
     OT_NUM_TYPES
 };
@@ -50,6 +51,7 @@ struct CommandLineOption
 typedef int (*LoadParametersFn)(struct CommandLineOption*, CL_StringType*);
 static int LoadCountingParameters(struct CommandLineOption*, CL_StringType*);
 static int LoadIntegerParameters(struct CommandLineOption*, CL_StringType*);
+static int LoadFloatParameters(struct CommandLineOption*, CL_StringType*);
 static int LoadStringParameters(struct CommandLineOption*, CL_StringType*);
 
 /**
@@ -65,6 +67,7 @@ static struct OptionTypeData s_optionTypeData[] =
 {
     { 0, LoadCountingParameters },
     { 1, LoadIntegerParameters },
+    { 1, LoadFloatParameters },
     { 1, LoadStringParameters },
 };
 
@@ -158,6 +161,23 @@ void CL_AddIntegerOption(CommandLineProcessor clp, int* value, CL_StringType nam
 {
     struct CommandLineOption* clo = malloc(sizeof(struct CommandLineOption));
     clo->type = OT_INTEGER;
+    clo->name = name;
+    clo->value = value;
+    clo->next = clp->options;
+    clp->options = clo;
+
+    *value = 0;
+}
+
+/**
+ * Add an floating point option to the CommandLineProcessor.
+ *
+ * The value following the option is loaded into \c *value.
+ */
+void CL_AddFloatOption(CommandLineProcessor clp, float* value, CL_StringType name)
+{
+    struct CommandLineOption* clo = malloc(sizeof(struct CommandLineOption));
+    clo->type = OT_FLOAT;
     clo->name = name;
     clo->value = value;
     clo->next = clp->options;
@@ -336,6 +356,51 @@ int LoadIntegerParameters(struct CommandLineOption* o, CL_StringType* params)
     {
         *v = (*v * 10) + (*p - '0');
         ++p;
+    }
+
+    if (*p != '\0')
+        Error("'" STR "' is not a valid parameter to '-" STR "'.", params[0], o->name);
+
+    *v *= negator;
+    return (*p == '\0') ? 1 : 0;
+}
+
+/**
+ * Load parameters into the OT_FLOAT command line option.
+ */
+int LoadFloatParameters(struct CommandLineOption* o, CL_StringType* params)
+{
+    float *v = o->value;
+    CL_StringType p = params[0];
+
+    int negator = 1;
+    if (*p == '-')
+    {
+        negator = -1;
+        ++p;
+    }
+
+    while ((*p != '\0') && (*p >= '0') && (*p <= '9'))
+    {
+        *v = (*v * 10) + (*p - '0');
+        ++p;
+    }
+
+    if (*p == '.')
+    {
+        float accumulator = 0.0f;
+        float divider = 1.0f;
+
+        ++p;
+
+        while ((*p != '\0') && (*p >= '0') && (*p <= '9'))
+        {
+            accumulator = (accumulator * 10.0f) + (*p - '0');
+            divider *= 10.0f;
+            ++p;
+        }
+
+        *v += (accumulator / divider);
     }
 
     if (*p != '\0')

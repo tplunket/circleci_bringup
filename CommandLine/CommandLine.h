@@ -41,6 +41,7 @@ void CL_Destroy(CommandLineProcessor);
 /// Options
 void CL_AddCountingOption(CommandLineProcessor, int* value, CL_StringType name);
 void CL_AddIntegerOption(CommandLineProcessor, int* value, CL_StringType name);
+void CL_AddFloatOption(CommandLineProcessor, float* value, CL_StringType name);
 void CL_AddStringOption(CommandLineProcessor, CL_StringType* value, CL_StringType name);
 
 /// Arguments

@@ -146,6 +146,41 @@ TEST_CASE( "CommandLine API, C Interface" )
         }
     }
 
+    SECTION( "Floating point options" )
+    {
+        float f = 8.0f;
+        CL_AddFloatOption(clp, &f, S("f"));
+
+        SECTION( "Value initialized to zero" )
+        {
+            REQUIRE(f == 0.0f);
+        }
+
+        SECTION( "Parse number with no decimal" )
+        {
+            ARGS(S("app"), S("-f"), S("18"));
+            int rv = CL_Parse(clp, num_args, args);
+            REQUIRE(rv);
+            REQUIRE(f == 18.0);
+        }
+
+        SECTION( "Parse number with decimal" )
+        {
+            ARGS(S("app"), S("-f"), S("73.25"));
+            int rv = CL_Parse(clp, num_args, args);
+            REQUIRE(rv);
+            REQUIRE(f == 73.25);
+        }
+
+        SECTION( "a leading decimal" )
+        {
+            ARGS(S("app"), S("-f"), S("-.625"));
+            int rv = CL_Parse(clp, num_args, args);
+            REQUIRE(rv);
+            REQUIRE(f == -0.625f);
+        }
+    }
+
     SECTION( "String options" )
     {
         CL_StringType q = (CL_CharType*)1;
@@ -469,6 +504,7 @@ TEST_CASE( "C++ API" )
         int int0, int1;
         int count0, count1;
         CL_StringType s0, s1;
+        float f0;
 
         cl.EnableOverflowArguments();
 
@@ -480,11 +516,13 @@ TEST_CASE( "C++ API" )
         cl.AddCountingOption(&count1, S("c1"));
         cl.AddStringOption(&s0, S("s0"));
         cl.AddStringOption(&s1, S("s1"));
+        cl.AddFloatOption(&f0, S("f0"));
 
         SECTION( "Toodaloo" )
         {
-            ARGS(S("application"), S("fred"), S("-1"), S("18"), S("-c1"), S("joebob"), S("-c0"), S("jaqueline"), S("-c1"),
-                 S("-c1"), S("-s1"), S("tags"), S("gnargnar"), S("-c1"));
+            ARGS(S("application"), S("fred"), S("-1"), S("18"), S("-c1"), S("joebob"), S("-c0"),
+                 S("jaqueline"), S("-c1"), S("-c1"), S("-s1"), S("tags"), S("gnargnar"), S("-c1"),
+                 S("-f0"), S("92.25"));
             bool rv = cl.Parse(num_args, args);
             REQUIRE(rv);
 #ifndef CL_USE_wchar_t
@@ -499,6 +537,7 @@ TEST_CASE( "C++ API" )
 #ifndef CL_USE_wchar_t
             REQUIRE_THAT(s1, Catch::Equals("tags"));
 #endif
+            REQUIRE(f0 == 92.25f);
 
             auto overflow = cl.GetOverflowArguments();
             REQUIRE(overflow.size() == 2);

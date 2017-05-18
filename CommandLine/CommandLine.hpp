@@ -23,6 +23,8 @@ public:
         { CL_AddCountingOption(processor, value, name); }
     void AddIntegerOption(int* value, CL_StringType name)
         { CL_AddIntegerOption(processor, value, name); }
+    void AddFloatOption(float* value, CL_StringType name)
+        { CL_AddFloatOption(processor, value, name); }
     void AddStringOption(CL_StringType* value, CL_StringType name)
         { CL_AddStringOption(processor, value, name); }
     void AddArgument(CL_StringType* value)
