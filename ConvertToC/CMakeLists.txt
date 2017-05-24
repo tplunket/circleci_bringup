@@ -10,8 +10,6 @@ set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 project(ConvertToC)
 
-project(ConvertToCTests)
-
 include_directories("${CMAKE_SOURCE_DIR}/..")
 
 add_executable(ConvertToC
