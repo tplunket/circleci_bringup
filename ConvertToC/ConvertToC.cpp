@@ -196,8 +196,8 @@ std::string FormatAsData(std::string data, std::string const& dataName)
     {
         std::ostringstream oss;
         if ((current % 1024) == 0)
-            oss << "    /* byte " << current << " */" << std::endl;
-        oss << "    ";
+            oss << "\t/* byte " << current << " */" << std::endl;
+        oss << "\t";
         for (int i = 0; (i < 16) && ((current + i) < dataLen); ++i)
         {
             if (i > 0)
