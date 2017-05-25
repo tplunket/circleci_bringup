@@ -149,39 +149,46 @@ std::string DefaultDataName(std::string name)
     return "k_" + name;
 }
 
-std::string Convert(std::string const& data)
+std::string FormatAsString(std::string const& data, std::string const& dataName)
 {
-    std::string output;
+    std::vector<std::string> output;
     std::string currentLine;
     for (int8_t c : data)
     {
         currentLine.append(CHARACTER_TRANSLATIONS[c]);
         if ((c == '\n') || (currentLine.size() > 90))
         {
-            output += currentLine;
-            output += "\"\n\t\"";
+            output.push_back(currentLine);
             currentLine.erase();
         }
     }
-    output += currentLine;
-    return output;
-}
+    if (!currentLine.empty())
+        output.push_back(currentLine);
 
-std::string FormatAsString(std::string const& data, std::string const& dataName)
-{
-    std::string lines = Convert(data);
-    // substitute pairs of question marks to avoid errant trigraph interpretation by the compiler.
-    // http://en.wikipedia.org/wiki/Digraphs_and_trigraphs
-    size_t match = lines.find("??");
-    std::string trigraphs = "=/'()!<>-";
-    while (match != std::string::npos)
-    {
-        if (trigraphs.find(lines[match+2]) != std::string::npos)
-            lines.replace(match, 2, "?\\?");
-        match = lines.find("??", match+1);
-    }
     std::ostringstream oss;
-    oss << "\t\"" << lines << "\";" << std::endl;
+
+    for (std::string& line : output)
+    {
+        if (oss.str().empty())
+            oss << "\t\"";
+        else
+            oss << "\"\n\t\"";
+
+        // Substitute pairs of question marks to avoid errant trigraph interpretation by the
+        // compiler. See http://en.wikipedia.org/wiki/Digraphs_and_trigraphs
+        size_t match = line.find("??");
+        std::string trigraphs = "=/'()!<>-";
+        while (match != std::string::npos)
+        {
+            if (trigraphs.find(line[match+2]) != std::string::npos)
+                line.replace(match, 2, "?\\?");
+            match = line.find("??", match+1);
+        }
+
+        oss << line;
+    }
+
+    oss << "\";" << std::endl;
     return oss.str();
 }
 
