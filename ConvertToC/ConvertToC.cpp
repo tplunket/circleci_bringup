@@ -189,7 +189,10 @@ std::string FormatAsData(std::string data, std::string const& dataName)
 {
     std::vector<std::string> output { "{" };
 
+    // put a NULL at the end in case the string is used as a string; it doesn't
+    // count into the length that we printed before though.
     data.push_back('\0');
+
     size_t dataLen = data.size();
     size_t current = 0;
     while (current < dataLen)
@@ -208,8 +211,6 @@ std::string FormatAsData(std::string data, std::string const& dataName)
         current += 16;
     }
 
-    // put a NULL at the end in case the string is used as a string; it doesn't
-    // count into the length that we printed before though.
     output.push_back("};");
     std::ostringstream actual_output;
     for (auto line : output)
