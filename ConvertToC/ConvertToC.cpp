@@ -153,13 +153,32 @@ std::string FormatAsString(std::string const& data, std::string const& dataName)
 {
     std::vector<std::string> output;
     std::string currentLine;
+    size_t startOfAscii = std::string::npos;
     for (int8_t c : data)
     {
+        if ((c >= 32) && (c < 127))
+        {
+            if (startOfAscii == std::string::npos)
+                startOfAscii = currentLine.length();
+        }
+        else
+            startOfAscii = std::string::npos;
+
         currentLine.append(CHARACTER_TRANSLATIONS[c]);
         if ((c == '\n') || (currentLine.size() > 90))
         {
-            output.push_back(currentLine);
-            currentLine.erase();
+            if ((startOfAscii == 0) || (startOfAscii == std::string::npos))
+            {
+                output.push_back(currentLine);
+                currentLine.erase();
+                startOfAscii = std::string::npos;
+            }
+            else
+            {
+                output.push_back(currentLine.substr(0, startOfAscii));
+                currentLine.erase(0, startOfAscii);
+                startOfAscii = 0;
+            }
         }
     }
     if (!currentLine.empty())
