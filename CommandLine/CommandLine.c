@@ -373,16 +373,16 @@ int LoadFloatParameters(struct CommandLineOption* o, CL_StringType* params)
     float *v = o->value;
     CL_StringType p = params[0];
 
-    int negator = 1;
+    float negator = 1.0f;
     if (*p == '-')
     {
-        negator = -1;
+        negator = -1.0f;
         ++p;
     }
 
     while ((*p != '\0') && (*p >= '0') && (*p <= '9'))
     {
-        *v = (*v * 10) + (*p - '0');
+        *v = (*v * 10.0f) + (*p - '0');
         ++p;
     }
 
