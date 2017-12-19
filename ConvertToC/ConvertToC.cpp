@@ -269,20 +269,22 @@ int Main(std::string const& inputFile, std::string const& outputFile, bool asBin
     std::string contents(size, 0);
     file.read(&contents[0], size);
 
-	if (asHex || (size > MAX_STRING_LENGTH))
-		asBinary = true;
-
     std::string output;
 
-    if (!forceString && asBinary)
+    if (!forceString && (asBinary || asHex))
     {
         GenerateTranslations(AS_NUMBERS, asHex);
         output = FormatAsData(contents, dataName);
     }
-    else
+	else if (forceString || (size < MAX_STRING_LENGTH))
     {
         GenerateTranslations(AS_STRING);
         output = FormatAsString(contents, dataName);
+    }
+    else
+    {
+        GenerateTranslations(AS_NUMBERS_AND_CHARS);
+        output = FormatAsData(contents, dataName);
     }
 
     std::ofstream outfile(outputFile, std::ios::binary | std::ios::trunc);
