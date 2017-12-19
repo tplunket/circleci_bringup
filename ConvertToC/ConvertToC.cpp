@@ -71,7 +71,6 @@ void GenerateTranslations(ExportType style, bool asHex=false)
         CHARACTER_TRANSLATIONS[' '] = " ";
         CHARACTER_TRANSLATIONS['"'] = "\\\"";
         CHARACTER_TRANSLATIONS['\\'] = "\\\\";
-        //CHARACTER_TRANSLATIONS['\n'] = "\\n\"\n\t\"";
         CHARACTER_TRANSLATIONS['\n'] = "\\n";
         CHARACTER_TRANSLATIONS['\r'] = "\\r";
         CHARACTER_TRANSLATIONS['\t'] = "\\t";
