@@ -156,16 +156,19 @@ std::string FormatAsString(std::string const& data, std::string const& dataName)
     size_t startOfAscii = std::string::npos;
     for (int8_t c : data)
     {
-        if ((c >= 32) && (c < 127))
+        if ((c != '\n') && (c != '\r'))
         {
-            if (startOfAscii == std::string::npos)
-                startOfAscii = currentLine.length();
+            if ((c == '\t') || ((c >= 32) && (c < 127)))
+            {
+                if (startOfAscii == std::string::npos)
+                    startOfAscii = currentLine.length();
+            }
+            else
+                startOfAscii = std::string::npos;
         }
-        else
-            startOfAscii = std::string::npos;
 
         currentLine.append(CHARACTER_TRANSLATIONS[c]);
-        if ((c == '\n') || (currentLine.size() > 90))
+        if (((startOfAscii != 0) && (currentLine.size() > 90)) || (currentLine.size() > 140))
         {
             if ((startOfAscii == 0) || (startOfAscii == std::string::npos))
             {
@@ -179,6 +182,12 @@ std::string FormatAsString(std::string const& data, std::string const& dataName)
                 currentLine.erase(0, startOfAscii);
                 startOfAscii = 0;
             }
+        }
+
+        if ((startOfAscii == 0) && (c == '\n'))
+        {
+            output.push_back(currentLine);
+            currentLine.erase();
         }
     }
     if (!currentLine.empty())
