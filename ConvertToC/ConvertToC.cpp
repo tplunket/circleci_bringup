@@ -256,7 +256,7 @@ std::string FormatAsData(std::string data, std::string const& dataName)
 }
 
 int Main(std::string const& inputFile, std::string const& outputFile, bool asBinary, bool asHex,
-         std::string const& dataName)
+         bool forceString, std::string const& dataName)
 {
     std::ifstream file(inputFile, std::ios::binary | std::ios::ate);
     if (!file.good())
@@ -274,7 +274,7 @@ int Main(std::string const& inputFile, std::string const& outputFile, bool asBin
 
     std::string output;
 
-    if (asBinary)
+    if (!forceString && asBinary)
     {
         GenerateTranslations(AS_NUMBERS, asHex);
         output = FormatAsData(contents, dataName);
@@ -302,11 +302,11 @@ int main(int argc, char const** argv)
     StdStreamLogTarget lt;
 
     std::string infile, outfile, dataName;
-    bool asBinary, asHex;
+    bool asBinary, asHex, forceString;
 
     {
         char const* in, *out;
-        int b, h;
+        int b, h, x;
         char const* no;
 
         CommandLine cl;
@@ -319,6 +319,7 @@ int main(int argc, char const** argv)
         cl.AddCountingOption(&h, "hex");
         cl.AddStringOption(&no, "n");
         cl.AddStringOption(&no, "name");
+        cl.AddCountingOption(&x, "x");
 
         if (!cl.Parse(argc, argv))
         {
@@ -338,6 +339,7 @@ int main(int argc, char const** argv)
         else
             outfile = infile + ".c";
 
+        forceString = x != 0;
         asBinary = b != 0;
         asHex = h != 0;
         if (no != nullptr)
@@ -346,5 +348,5 @@ int main(int argc, char const** argv)
             dataName = DefaultDataName(infile);
     }
 
-    return Main(infile, outfile, asBinary, asHex, dataName);
+    return Main(infile, outfile, asBinary, asHex, forceString, dataName);
 }
