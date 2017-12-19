@@ -270,7 +270,9 @@ int Main(std::string const& inputFile, std::string const& outputFile, bool asBin
 
     std::string output;
 
-    if (!forceString && (asBinary || asHex))
+    asBinary |= asHex;
+
+    if (!forceString && asBinary)
     {
         GenerateTranslations(AS_NUMBERS, asHex);
         output = FormatAsData(contents, dataName);
