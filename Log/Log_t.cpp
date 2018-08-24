@@ -102,7 +102,7 @@ TEST_CASE( "Test the actual log messages returned" )
                              void* data) -> void
     {
         LogCapture* d = (LogCapture*)data;
-        strncpy(d->buffer, message, k_bufferSize);
+        strncpy_s(d->buffer, message, k_bufferSize);
         d->buffer[k_bufferSize-1] = 0;
         d->issuingFile = file;
         d->issuingLine = line;
