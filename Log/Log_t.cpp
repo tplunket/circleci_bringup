@@ -12,6 +12,10 @@
 #define CATCH_CONFIG_MAIN
 #include "Catch/Catch.hpp"
 
+#ifdef _MSC_VER
+#define strncpy strncpy_s
+#endif
+
 TEST_CASE( "Macros in if clauses" )
 {
     /// Do the macros play nice with un-blocked if/else blocks?
@@ -102,7 +106,7 @@ TEST_CASE( "Test the actual log messages returned" )
                              void* data) -> void
     {
         LogCapture* d = (LogCapture*)data;
-        strncpy_s(d->buffer, message, k_bufferSize);
+        strncpy(d->buffer, message, k_bufferSize);
         d->buffer[k_bufferSize-1] = 0;
         d->issuingFile = file;
         d->issuingLine = line;

@@ -13,7 +13,7 @@
  *    Option: an optional item appearing on the command line, preceded by '-'. May require (a fixed
  *            number of) parameters.
  *    Parameter: an item, perhaps one of several, connected to an option.
- *    Argument: a non-option item on the command line. Can be fixed in number and the system can be
+ *    Argument: a non-option item on the command line. Can be fixed in number or the system can be
  *              configured to collect the overflow.
  */
 
