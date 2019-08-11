@@ -237,6 +237,11 @@ bool operator==(const Simple2dVector& lhs, const Simple2dVector& rhs)
     return (lhs.x == rhs.x) && (lhs.y == rhs.y);
 }
 
+bool operator!=(const Simple2dVector& lhs, const Simple2dVector& rhs)
+{
+    return (lhs.x != rhs.x) || (lhs.y != rhs.y);
+}
+
 Simple2dVector operator+(const Simple2dVector& lhs, const Simple2dVector & rhs)
 {
     return { lhs.x + rhs.x, lhs.y + rhs.y };
@@ -252,22 +257,62 @@ Simple2dVector operator*(const Simple2dVector& lhs, float scale)
     return { lhs.x * scale, lhs.y * scale };
 }
 
-TEST_CASE( "A simple vector type with no spring tension." )
+float dotProduct(const Simple2dVector& rhs, const Simple2dVector lhs)
+{
+    return (rhs.x * lhs.x) + (rhs.y * lhs.y);
+}
+
+float lengthSquared(const Simple2dVector& v)
+{
+    return dotProduct(v, v);
+}
+
+TEST_CASE( "A simple vector type." )
 {
     auto testValue = GENERATE(Simple2dVector{0,0},
                               Simple2dVector{1.0,1.0},
                               Simple2dVector{99.0,-38.5});
 
-    SprungValue<Simple2dVector> v(testValue);
-    CHECK(v.GetValue() == testValue);
-    CHECK(v.GetVelocity() == Simple2dVector::zero);
+    SECTION( "with no spring tension." )
+    {
+        SprungValue<Simple2dVector> v(testValue);
+        v.SetGoal(Simple2dVector::zero);
+        CHECK(v.GetValue() == testValue);
+        CHECK(v.GetVelocity() == Simple2dVector::zero);
 
-    v.Tick(0);
-    CHECK(v.GetValue() == testValue);
-    CHECK(v.GetVelocity() == Simple2dVector::zero);
+        v.Tick(0);
+        CHECK(v.GetValue() == testValue);
+        CHECK(v.GetVelocity() == Simple2dVector::zero);
 
-    v.Tick(1);
-    CHECK(v.GetValue() == testValue);
-    CHECK(v.GetVelocity() == Simple2dVector::zero);
+        v.Tick(1);
+        CHECK(v.GetValue() == testValue);
+        CHECK(v.GetVelocity() == Simple2dVector::zero);
+    }
+
+    SECTION( "with some spring tension." )
+    {
+        if (testValue != Simple2dVector::zero)
+        {
+            SprungValue<Simple2dVector> v(testValue, 5.0f);
+            v.SetGoal(Simple2dVector::zero);
+            CHECK(v.GetValue() == testValue);
+            CHECK(v.GetVelocity() == Simple2dVector::zero);
+
+            float lastLen = lengthSquared(v.GetValue());
+            v.Tick(0);
+            CHECK(v.GetValue() == testValue);
+            CHECK(v.GetVelocity() == Simple2dVector::zero);
+
+            v.Tick(1);
+            CHECK(lengthSquared(v.GetValue()) <= lastLen);
+            // velocity and value are pointing in opposite directions.
+            CHECK(dotProduct(v.GetValue(), v.GetVelocity()) < 0);
+
+            lastLen = lengthSquared(v.GetValue());
+            v.Tick(1);
+            CHECK(lengthSquared(v.GetValue()) <= lastLen);
+            CHECK(dotProduct(v.GetValue(), v.GetVelocity()) < 0);
+        }
+    }
 }
 
