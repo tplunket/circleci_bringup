@@ -10,7 +10,7 @@
 #ifndef SprungValue_h
 #define SprungValue_h
 
-#include <utility>
+#include <cmath>
 
 template <typename T>
 class SprungValue
@@ -22,7 +22,7 @@ public:
     SprungValue(T startingValue, T startingVelocity, float strength) :
         value(startingValue),
         velocity(startingVelocity),
-        strength(strength),
+        strength(strength)
             {}
 
     T Tick(float deltaTime); /// delta time is in seconds.

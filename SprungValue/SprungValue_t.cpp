@@ -56,6 +56,50 @@ TEST_CASE( "A single floating point value." )
             CHECK(v.GetVelocity() == 0);
         }
     }
+
+    SECTION( "permuting it all" )
+    {
+        if ((testValue != 0.0f) && (testValue < 1e10f))
+        {
+            float testValue2 = GENERATE(1.0f, 2.0f, 0.5f, 1000.0f);
+            if (testValue < 0) testValue = -testValue;
+
+            SprungValue<float> v(testValue, testValue2);
+            v.SetGoal(0);
+
+            CHECK(v.GetValue() == testValue);
+            CHECK(v.GetVelocity() == 0);
+
+            float lastVal = v.GetValue();
+            v.Tick(0);
+            CHECK(v.GetValue() == lastVal);
+            CHECK(v.GetVelocity() == 0);
+
+            lastVal = v.GetValue();
+            v.Tick(1.0f);
+            CHECK(v.GetValue() < lastVal);
+            CHECK(v.GetValue() >= 0);
+            CHECK(v.GetVelocity() <= 0);
+
+            lastVal = v.GetValue();
+            v.Tick(1.0f);
+            CHECK(v.GetValue() <= lastVal);
+            CHECK(v.GetValue() >= 0);
+            CHECK(v.GetVelocity() <= 0);
+
+            lastVal = v.GetValue();
+            v.Tick(1.0f);
+            CHECK(v.GetValue() <= lastVal);
+            CHECK(v.GetValue() >= 0);
+            CHECK(v.GetVelocity() <= 0);
+
+            lastVal = v.GetValue();
+            v.Tick(1.0f);
+            CHECK(v.GetValue() <= lastVal);
+            CHECK(v.GetValue() >= 0);
+            CHECK(v.GetVelocity() <= 0);
+        }
+    }
 }
 
 TEST_CASE( "huge values" )
@@ -70,29 +114,107 @@ TEST_CASE( "huge values" )
         CHECK(v.GetValue() == k_largeValue);
         CHECK(v.GetVelocity() == 0);
 
+        float lastVal = v.GetValue();
         v.Tick(0);
-        CHECK(v.GetValue() == k_largeValue);
+        CHECK(v.GetValue() == lastVal);
         CHECK(v.GetVelocity() == 0);
 
         v.Tick(1.0f);
-        CHECK(v.GetValue() < k_largeValue);
+        CHECK(v.GetValue() < lastVal);
         CHECK(v.GetValue() > 0);
         CHECK(v.GetVelocity() < 0);
 
+        lastVal = v.GetValue();
         v.Tick(1.0f);
-        CHECK(v.GetValue() < k_largeValue);
+        CHECK(v.GetValue() < lastVal);
         CHECK(v.GetValue() > 0);
         CHECK(v.GetVelocity() < 0);
 
+        lastVal = v.GetValue();
         v.Tick(1.0f);
-        CHECK(v.GetValue() < k_largeValue);
+        CHECK(v.GetValue() < lastVal);
         CHECK(v.GetValue() > 0);
         CHECK(v.GetVelocity() < 0);
 
+        lastVal = v.GetValue();
         v.Tick(1.0f);
-        CHECK(v.GetValue() < k_largeValue);
+        CHECK(v.GetValue() < lastVal);
         CHECK(v.GetValue() > 0);
         CHECK(v.GetVelocity() < 0);
+    }
+
+    SECTION( "heavy tension" )
+    {
+        SprungValue<float> v(10.0f, k_largeValue);
+        v.SetGoal(0);
+
+        CHECK(v.GetValue() == 10.0f);
+        CHECK(v.GetVelocity() == 0);
+
+        float lastVal = v.GetValue();
+        v.Tick(0);
+        CHECK(v.GetValue() == lastVal);
+        CHECK(v.GetVelocity() == 0);
+
+        v.Tick(1.0f);
+        CHECK(v.GetValue() < lastVal);
+        CHECK(v.GetValue() >= 0);
+        CHECK(v.GetVelocity() <= 0);
+
+        lastVal = v.GetValue();
+        v.Tick(1.0f);
+        CHECK(v.GetValue() <= lastVal);
+        CHECK(v.GetValue() >= 0);
+        CHECK(v.GetVelocity() <= 0);
+
+        lastVal = v.GetValue();
+        v.Tick(1.0f);
+        CHECK(v.GetValue() <= lastVal);
+        CHECK(v.GetValue() >= 0);
+        CHECK(v.GetVelocity() <= 0);
+
+        lastVal = v.GetValue();
+        v.Tick(1.0f);
+        CHECK(v.GetValue() <= lastVal);
+        CHECK(v.GetValue() >= 0);
+        CHECK(v.GetVelocity() <= 0);
+    }
+
+    SECTION( "Both!" )
+    {
+        SprungValue<float> v(k_largeValue, k_largeValue);
+        v.SetGoal(0);
+
+        CHECK(v.GetValue() == k_largeValue);
+        CHECK(v.GetVelocity() == 0);
+
+        float lastVal = v.GetValue();
+        v.Tick(0);
+        CHECK(v.GetValue() == lastVal);
+        CHECK(v.GetVelocity() == 0);
+
+        v.Tick(1.0f);
+        CHECK(v.GetValue() <= lastVal);
+        CHECK(v.GetValue() >= 0);
+        CHECK(v.GetVelocity() <= 0);
+
+        lastVal = v.GetValue();
+        v.Tick(1.0f);
+        CHECK(v.GetValue() <= lastVal);
+        CHECK(v.GetValue() >= 0);
+        CHECK(v.GetVelocity() <= 0);
+
+        lastVal = v.GetValue();
+        v.Tick(1.0f);
+        CHECK(v.GetValue() <= lastVal);
+        CHECK(v.GetValue() >= 0);
+        CHECK(v.GetVelocity() <= 0);
+
+        lastVal = v.GetValue();
+        v.Tick(1.0f);
+        CHECK(v.GetValue() <= lastVal);
+        CHECK(v.GetValue() >= 0);
+        CHECK(v.GetVelocity() <= 0);
     }
 }
 
