@@ -28,7 +28,7 @@ public:
     T Tick(float deltaTime); /// delta time is in seconds.
 
     T GetValue() const { return value; }
-    T GetVelocity() const { return T(); }
+    T GetVelocity() const { return velocity; }
 
     void SetGoal(T newGoal, T newGoalVelocity=T())
             {

@@ -42,4 +42,4 @@ echo on
 cd %PROJECT_DIR%
 cmake -G %GENERATOR% %EXTRA% "..\..\..\%PROJECT%\" && cmake --build . --config %CONFIG% -j && ".\%CONFIG%\%PROJECT%Tests"
 
-popd
+@popd

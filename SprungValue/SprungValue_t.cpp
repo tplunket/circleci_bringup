@@ -58,6 +58,44 @@ TEST_CASE( "A single floating point value." )
     }
 }
 
+TEST_CASE( "huge values" )
+{
+    const float k_largeValue = 90000000.0f;
+
+    SECTION( "big moves" )
+    {
+        SprungValue<float> v(k_largeValue, 1.0f);
+        v.SetGoal(0);
+
+        CHECK(v.GetValue() == k_largeValue);
+        CHECK(v.GetVelocity() == 0);
+
+        v.Tick(0);
+        CHECK(v.GetValue() == k_largeValue);
+        CHECK(v.GetVelocity() == 0);
+
+        v.Tick(1.0f);
+        CHECK(v.GetValue() < k_largeValue);
+        CHECK(v.GetValue() > 0);
+        CHECK(v.GetVelocity() < 0);
+
+        v.Tick(1.0f);
+        CHECK(v.GetValue() < k_largeValue);
+        CHECK(v.GetValue() > 0);
+        CHECK(v.GetVelocity() < 0);
+
+        v.Tick(1.0f);
+        CHECK(v.GetValue() < k_largeValue);
+        CHECK(v.GetValue() > 0);
+        CHECK(v.GetVelocity() < 0);
+
+        v.Tick(1.0f);
+        CHECK(v.GetValue() < k_largeValue);
+        CHECK(v.GetValue() > 0);
+        CHECK(v.GetVelocity() < 0);
+    }
+}
+
 TEST_CASE( "A single floating point value being pulled." )
 {
 
