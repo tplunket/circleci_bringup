@@ -17,7 +17,7 @@
 #include <string>
 #include <queue>
 
-#ifdef CL_USE_wchar_t
+#if CL_USE_wchar_t
 #define S(x) L ## x
 #else
 #define S(x) x

@@ -11,7 +11,7 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 option(USE_wchar_t "Use wchar_t instead of char" off)
 if (USE_wchar_t)
-    add_definitions("-DCL_USE_wchar_t")
+    add_definitions("-DCL_USE_wchar_t=1")
 endif(USE_wchar_t)
 
 project(CommandLine)

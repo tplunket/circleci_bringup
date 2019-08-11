@@ -22,11 +22,19 @@ extern "C"
 {
 #endif
 
-#ifdef CL_USE_wchar_t
-#include <wchar.h>
-typedef wchar_t CL_CharType;
+#if !defined(CL_USE_wchar_t)
+ #if defined(_MSC_VER) && defined(UNICODE)
+  #define CL_USE_wchar_t 1
+ #else
+  #define CL_USE_wchar_t 0
+ #endif
+#endif
+
+#if CL_USE_wchar_t
+ #include <wchar.h>
+ typedef wchar_t CL_CharType;
 #else
-typedef char CL_CharType;
+ typedef char CL_CharType;
 #endif
 
 typedef CL_CharType const* CL_StringType;
